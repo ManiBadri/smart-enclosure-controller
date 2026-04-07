@@ -1,0 +1,19 @@
+CS  D5
+
+RESET TX2
+
+DC  RX2
+
+SDI(MOSI)   D23
+
+SCK    D18
+
+LED    D4
+
+T-CLK   D18
+
+T-CS    D25
+
+T-DIN   D23
+
+T-D0    D19
