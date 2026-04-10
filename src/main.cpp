@@ -284,6 +284,10 @@ void setup(){
 
     Serial.begin(115200);
 
+    pinMode(wifiRedLed, OUTPUT);
+    pinMode(wifiGrnLed, OUTPUT);
+
+    
     WiFi.begin(ssid, password);
 
     pinMode(4, OUTPUT);
@@ -404,13 +408,14 @@ void setup(){
     build_main_screen();
     lv_scr_load(main_scrn);
 
-    lv_timer_handler();   //force first draw
+    //force first draw
+    lv_timer_handler();   
     delay(50);
 
 }
 
 
-
+//--------------------------- WiFi ---------------------------
 void handleWiFi(){
 
   if(WiFi.status() != WL_CONNECTED){
