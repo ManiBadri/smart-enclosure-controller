@@ -68,10 +68,10 @@ enum WidgetType {
 
 WidgetType slots[MAX_SLOTS];
 
-//Slot positions
+//Slot positions for the widgets
 lv_point_t slot_pos[MAX_SLOTS] = {
-    {40, 60}, {40, 140}, {40, 220},
-    {180, 60}, {180, 140}, {180, 220}
+    {50, 60}, {50, 140}, {50, 220},
+    {160, 60}, {160, 140}, {160, 220}
 };
 
 //--------------------------- DISPLAY ---------------------------
@@ -163,7 +163,7 @@ void create_widget_for_slot(int i){
             lv_label_set_text(lbl, "Temp: --C");
             lv_obj_set_pos(lbl, slot_pos[i].x - 30, slot_pos[i].y);
             lv_obj_set_style_text_color(lbl, lv_color_white(), 0);
-                
+
             slot_obj[i] = NULL;
             slot_label[i] = lbl;
         } break;
