@@ -53,6 +53,10 @@ lv_obj_t *wifi_img;
 //Theme
 lv_color_t current_theme_color;
 
+//for the widget slots
+lv_obj_t* slot_obj[MAX_SLOTS];   // main widget (arc, bar, etc.)
+lv_obj_t* slot_label[MAX_SLOTS]; // for text widgets (optional)
+
 //Slots
 enum WidgetType {
     WIDGET_NONE,
@@ -120,13 +124,16 @@ void create_widget_for_slot(int i){
             lv_obj_t *arc = lv_arc_create(main_scrn);
             lv_obj_set_size(arc, 50, 50);
             lv_obj_set_pos(arc, slot_pos[i].x - 25, slot_pos[i].y - 25);
-
+                
             lv_arc_set_range(arc, 0, 100);
             lv_arc_set_value(arc, 50);
-
+                
             lv_obj_set_style_arc_width(arc, 6, LV_PART_MAIN);
             lv_obj_set_style_arc_width(arc, 6, LV_PART_INDICATOR);
             lv_obj_remove_style(arc, NULL, LV_PART_KNOB);
+                
+            slot_obj[i] = arc;
+            slot_label[i] = NULL;
         } break;
 
         case WIDGET_HUMIDITY_TEXT:{
@@ -134,6 +141,9 @@ void create_widget_for_slot(int i){
             lv_label_set_text(lbl, "Hum: --%");
             lv_obj_set_pos(lbl, slot_pos[i].x - 30, slot_pos[i].y);
             lv_obj_set_style_text_color(lbl, lv_color_white(), 0);
+
+            slot_obj[i] = NULL;
+            slot_label[i] = lbl;
         } break;
 
         case WIDGET_TEMP_BAR:{
@@ -143,6 +153,9 @@ void create_widget_for_slot(int i){
 
             lv_bar_set_range(bar, 10, 40);
             lv_bar_set_value(bar, 20, LV_ANIM_OFF);
+
+            slot_obj[i] = bar;
+            slot_label[i] = NULL;
         } break;
 
         case WIDGET_TEMP_TEXT:{
@@ -150,6 +163,9 @@ void create_widget_for_slot(int i){
             lv_label_set_text(lbl, "Temp: --C");
             lv_obj_set_pos(lbl, slot_pos[i].x - 30, slot_pos[i].y);
             lv_obj_set_style_text_color(lbl, lv_color_white(), 0);
+                
+            slot_obj[i] = NULL;
+            slot_label[i] = lbl;
         } break;
 
         default: break;
@@ -160,7 +176,6 @@ void create_widget_for_slot(int i){
 void build_main_screen(){
     lv_obj_clean(main_scrn);
 
-    //🔥 RE-APPLY BACKGROUND
     lv_obj_set_style_bg_color(main_scrn, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(main_scrn, LV_OPA_COVER, 0);
 
@@ -287,7 +302,7 @@ void setup(){
     pinMode(wifiRedLed, OUTPUT);
     pinMode(wifiGrnLed, OUTPUT);
 
-    
+
     WiFi.begin(ssid, password);
 
     pinMode(4, OUTPUT);
@@ -437,9 +452,60 @@ void handleWiFi(){
 
 
 
+void updateHumidity(){
+    static uint32_t lastUpdate = 0;
+    if(millis() - lastUpdate < 4000) return;
+    lastUpdate = millis();
+
+    float h = dht.readHumidity();
+    if(isnan(h)) return;
+
+    char buf[32];
+    sprintf(buf, "Hum: %.1f%%", h);
+
+    for(int i = 0; i < MAX_SLOTS; i++){
+        if(slots[i] == WIDGET_HUMIDITY_ARC && slot_obj[i]){
+            lv_arc_set_value(slot_obj[i], (int)h);
+        }
+
+        if(slots[i] == WIDGET_HUMIDITY_TEXT && slot_label[i]){
+            lv_label_set_text(slot_label[i], buf);
+        }
+    }
+}
+
+
+void updateTemperature(){
+    static uint32_t lastUpdate = 0;
+    if(millis() - lastUpdate < 4000) return;
+    lastUpdate = millis();
+
+    float t = dht.readTemperature();
+    if(isnan(t)) return;
+
+    char buf[32];
+    sprintf(buf, "Temp: %.1fC", t);
+
+    for(int i = 0; i < MAX_SLOTS; i++){
+        if(slots[i] == WIDGET_TEMP_BAR && slot_obj[i]){
+            lv_bar_set_value(slot_obj[i], (int)t, LV_ANIM_OFF);
+        }
+
+        if(slots[i] == WIDGET_TEMP_TEXT && slot_label[i]){
+            lv_label_set_text(slot_label[i], buf);
+        }
+    }
+}
+
+
 //--------------------------- LOOP ---------------------------
 void loop(){
     lv_timer_handler();
     handleWiFi();
+
+    updateHumidity();
+    updateTemperature();
+
+
     delay(5);
 }
