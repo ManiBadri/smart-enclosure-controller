@@ -257,6 +257,7 @@ void open_add_menu(int slot_index){
     }
 }
 
+//edit screen plus and x signs (for now)
 void build_edit_screen(){
 
     edit_scrn = lv_obj_create(NULL);
@@ -267,6 +268,11 @@ void build_edit_screen(){
         lv_obj_t *btn = lv_btn_create(edit_scrn);
         lv_obj_set_size(btn, 60, 60);
         lv_obj_set_pos(btn, slot_pos[i].x - 30, slot_pos[i].y - 30);
+
+        //colors and border looks bad but 
+        lv_obj_set_style_bg_color(btn, lv_color_hex(0x000000),LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_color(btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_width(btn, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_t *label = lv_label_create(btn);
 
