@@ -203,6 +203,7 @@ void build_main_screen(){
 
     apply_theme_color(current_theme_color);
 }
+
 //--------------------------- EDIT SCREEN ---------------------------
 void build_edit_screen();
 
@@ -220,9 +221,12 @@ void slot_click_event(lv_event_t * e){
 
 void open_add_menu(int slot_index){
 
+    //add selector pop up menu
     lv_obj_t *menu = lv_obj_create(edit_scrn);
     lv_obj_set_size(menu, 200, 220);
     lv_obj_center(menu);
+    lv_obj_set_style_bg_color(menu, lv_color_hex(0x383838),LV_PART_MAIN | LV_STATE_DEFAULT); //bg color of pop up menu
+    lv_obj_set_style_border_color(menu, lv_color_hex(0xFFFFFF),LV_PART_MAIN | LV_STATE_DEFAULT); //border color
 
     const char *names[] = {"Hum Arc", "Hum Text", "Temp Bar", "Temp Text"};
 
