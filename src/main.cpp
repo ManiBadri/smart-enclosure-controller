@@ -260,11 +260,13 @@ void open_add_menu(int slot_index){
 //edit screen plus and x signs (for now)
 void build_edit_screen(){
 
+
     edit_scrn = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(edit_scrn, lv_color_black(), 0);
 
     for(int i = 0; i < MAX_SLOTS; i++){
-
+        
+        //creating the buttons    
         lv_obj_t *btn = lv_btn_create(edit_scrn);
         lv_obj_set_size(btn, 60, 60);
         lv_obj_set_pos(btn, slot_pos[i].x - 30, slot_pos[i].y - 30);
@@ -275,14 +277,16 @@ void build_edit_screen(){
         lv_obj_set_style_border_width(btn, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_t *label = lv_label_create(btn);
-
+        //checking if theres a widget or not
         if(slots[i] == WIDGET_NONE){
+            //add widget labe
             lv_label_set_text(label, "+");
             lv_obj_add_event_cb(btn, [](lv_event_t * e){
                 int index = (int)lv_event_get_user_data(e);
                 open_add_menu(index);
             }, LV_EVENT_CLICKED, (void*)i);
         } else {
+            //remove widget label
             lv_label_set_text(label, "X");
             lv_obj_add_event_cb(btn, slot_click_event, LV_EVENT_CLICKED, (void*)i);
         }
