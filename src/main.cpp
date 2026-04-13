@@ -30,6 +30,9 @@ DHT dht(DHTPIN, DHTTYPE);
 //Preferences
 Preferences prefs;
 
+//for the temp to switch between fahrenheit and cel
+bool useFahrenheit = false;
+
 //TFT + LVGL
 TFT_eSPI tft = TFT_eSPI();
 static lv_disp_draw_buf_t draw_buf;
@@ -265,7 +268,7 @@ void build_edit_screen(){
     lv_obj_set_style_bg_color(edit_scrn, lv_color_black(), 0);
 
     for(int i = 0; i < MAX_SLOTS; i++){
-        
+
         //creating the buttons    
         lv_obj_t *btn = lv_btn_create(edit_scrn);
         lv_obj_set_size(btn, 60, 60);
@@ -363,6 +366,9 @@ void setup(){
 
     current_theme_color = lv_color_hex(prefs.getUInt("btn_color", 0x2196F3));
 
+    useFahrenheit = prefs.getBool("useF", false);
+
+
     //SETTINGS SCREEN BUTTON
     //--------------------------- SETTINGS SCREEN UI ---------------------------
 
@@ -434,6 +440,31 @@ void setup(){
         lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_LEFT, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 
+    //Temp Unit Label
+    lv_obj_t *temp_label = lv_label_create(settings_scrn);
+    lv_label_set_text(temp_label, "Fahrenheit");
+    lv_obj_align(temp_label, LV_ALIGN_TOP_LEFT, 10, 170);
+    lv_obj_set_style_text_color(temp_label, lv_color_white(), 0);
+
+    //Switch
+    lv_obj_t *temp_switch = lv_switch_create(settings_scrn);
+    lv_obj_align(temp_switch, LV_ALIGN_TOP_RIGHT, -20, 165);
+
+    //Set initial state
+    if(useFahrenheit){
+        lv_obj_add_state(temp_switch, LV_STATE_CHECKED);
+    }
+
+    //Switch event
+    lv_obj_add_event_cb(temp_switch, [](lv_event_t * e){
+        lv_obj_t *sw = lv_event_get_target(e);
+
+        useFahrenheit = lv_obj_has_state(sw, LV_STATE_CHECKED);
+
+        prefs.putBool("useF", useFahrenheit);
+
+    }, LV_EVENT_VALUE_CHANGED, NULL);
+
     build_main_screen();
     lv_scr_load(main_scrn);
 
@@ -487,6 +518,41 @@ void updateHumidity(){
         }
     }
 }
+
+//untested for both units
+/*void updateHumidity(){
+    static uint32_t lastUpdate = 0;
+
+    //update every 4 seconds
+    if(millis() - lastUpdate < 4000) return;
+    lastUpdate = millis();
+
+    //read sensor
+    float h = dht.readHumidity();
+    if(isnan(h)) return;
+
+    //clamp just in case (DHT can glitch sometimes)
+    if(h < 0) h = 0;
+    if(h > 100) h = 100;
+
+    //prepare text once
+    char buf[32];
+    sprintf(buf, "Hum: %.1f%%", h);
+
+    //update all slots
+    for(int i = 0; i < MAX_SLOTS; i++){
+
+        //update arc widgets
+        if(slots[i] == WIDGET_HUMIDITY_ARC && slot_obj[i]){
+            lv_arc_set_value(slot_obj[i], (int)(h + 0.5)); // rounded
+        }
+
+        //update text widgets
+        if(slots[i] == WIDGET_HUMIDITY_TEXT && slot_label[i]){
+            lv_label_set_text(slot_label[i], buf);
+        }
+    }
+}*/
 
 
 void updateTemperature(){
