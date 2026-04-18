@@ -154,7 +154,15 @@ void create_widget_for_slot(int i){
             lv_obj_set_size(bar, 10, 80);
             lv_obj_set_pos(bar, slot_pos[i].x, slot_pos[i].y - 40);
 
-            lv_bar_set_range(bar, 10, 40);
+            //dif range for temp bard depending on C or F
+            if(slots[i] == WIDGET_TEMP_BAR && slot_obj[i]){
+
+                if(useFahrenheit){
+                    lv_bar_set_range(slot_obj[i], 10, 40);
+                } else {
+                    lv_bar_set_range(slot_obj[i], 50, 104);
+                }
+            }
             lv_bar_set_value(bar, 20, LV_ANIM_OFF);
 
             slot_obj[i] = bar;
@@ -570,12 +578,21 @@ void updateTemperature(){
         t = t * 9.0 / 5.0 + 32.0;
     }
 
+
+
     char buf[32];
     sprintf(buf, "Temp: %.1f%s", t, useFahrenheit ? "F" : "C");
 
     for(int i = 0; i < MAX_SLOTS; i++){
 
+        //so it depends depending on C and F changing 
         if(slots[i] == WIDGET_TEMP_BAR && slot_obj[i]){
+            if(useFahrenheit){
+                lv_bar_set_range(slot_obj[i], 50, 104);
+            } else {
+                lv_bar_set_range(slot_obj[i], 10, 40);
+            }
+
             lv_bar_set_value(slot_obj[i], (int)(t + 0.5), LV_ANIM_OFF);
         }
 
