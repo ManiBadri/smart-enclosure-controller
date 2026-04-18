@@ -316,6 +316,8 @@ void setup(){
 
     Serial.begin(115200);
 
+    dht.begin();
+
     pinMode(wifiRedLed, OUTPUT);
     pinMode(wifiGrnLed, OUTPUT);
 
@@ -446,16 +448,16 @@ void setup(){
     lv_obj_align(temp_label, LV_ALIGN_TOP_LEFT, 10, 170);
     lv_obj_set_style_text_color(temp_label, lv_color_white(), 0);
 
-    //Switch
+    //switch for temp
     lv_obj_t *temp_switch = lv_switch_create(settings_scrn);
     lv_obj_align(temp_switch, LV_ALIGN_TOP_RIGHT, -20, 165);
 
-    //Set initial state
+    //set initial state
     if(useFahrenheit){
         lv_obj_add_state(temp_switch, LV_STATE_CHECKED);
     }
 
-    //Switch event
+    //temp switch event
     lv_obj_add_event_cb(temp_switch, [](lv_event_t * e){
         lv_obj_t *sw = lv_event_get_target(e);
 
@@ -496,8 +498,8 @@ void handleWiFi(){
 }
 
 
-
-void updateHumidity(){
+//old
+/*void updateHumidity(){
     static uint32_t lastUpdate = 0;
     if(millis() - lastUpdate < 4000) return;
     lastUpdate = millis();
@@ -517,29 +519,28 @@ void updateHumidity(){
             lv_label_set_text(slot_label[i], buf);
         }
     }
-}
+}*/
 
 //untested for both units
-/*void updateHumidity(){
+void updateHumidity(){
     static uint32_t lastUpdate = 0;
 
     //update every 4 seconds
     if(millis() - lastUpdate < 4000) return;
     lastUpdate = millis();
 
-    //read sensor
+
     float h = dht.readHumidity();
     if(isnan(h)) return;
 
-    //clamp just in case (DHT can glitch sometimes)
+
     if(h < 0) h = 0;
     if(h > 100) h = 100;
 
-    //prepare text once
+
     char buf[32];
     sprintf(buf, "Hum: %.1f%%", h);
 
-    //update all slots
     for(int i = 0; i < MAX_SLOTS; i++){
 
         //update arc widgets
@@ -552,23 +553,30 @@ void updateHumidity(){
             lv_label_set_text(slot_label[i], buf);
         }
     }
-}*/
+}
 
 
 void updateTemperature(){
     static uint32_t lastUpdate = 0;
+
     if(millis() - lastUpdate < 4000) return;
     lastUpdate = millis();
 
     float t = dht.readTemperature();
     if(isnan(t)) return;
 
+    // convert if needed
+    if(useFahrenheit){
+        t = t * 9.0 / 5.0 + 32.0;
+    }
+
     char buf[32];
-    sprintf(buf, "Temp: %.1fC", t);
+    sprintf(buf, "Temp: %.1f%s", t, useFahrenheit ? "F" : "C");
 
     for(int i = 0; i < MAX_SLOTS; i++){
+
         if(slots[i] == WIDGET_TEMP_BAR && slot_obj[i]){
-            lv_bar_set_value(slot_obj[i], (int)t, LV_ANIM_OFF);
+            lv_bar_set_value(slot_obj[i], (int)(t + 0.5), LV_ANIM_OFF);
         }
 
         if(slots[i] == WIDGET_TEMP_TEXT && slot_label[i]){
@@ -576,7 +584,6 @@ void updateTemperature(){
         }
     }
 }
-
 
 //--------------------------- LOOP ---------------------------
 void loop(){
