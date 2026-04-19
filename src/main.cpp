@@ -199,6 +199,17 @@ void build_main_screen(){
     lv_obj_align(wifi_img, LV_ALIGN_TOP_RIGHT, -5, 5);
     lv_img_set_src(wifi_img, &wifiOFF);
 
+    //WiFi button
+    lv_obj_t *btn_wifi = lv_btn_create(main_scrn);
+    lv_obj_set_size(btn_wifi, 40, 40);
+    lv_obj_align(btn_wifi, LV_ALIGN_BOTTOM_RIGHT, 0, -10);
+    lv_obj_set_style_bg_color(btn_wifi, lv_color_hex(0x0000FF), 0);
+
+    lv_obj_t *wifi_lbl = lv_label_create(btn_wifi);
+    lv_label_set_text(wifi_lbl, "WiFi");
+    lv_obj_center(wifi_lbl);
+
+
     //Settings button
     stnBtn = lv_btn_create(main_scrn);
     lv_obj_set_size(stnBtn, 40, 40);
@@ -368,7 +379,7 @@ void setup(){
     lv_obj_set_style_bg_color(main_scrn, lv_color_black(), 0);
     lv_obj_set_style_bg_color(settings_scrn, lv_color_black(), 0);
 
-    prefs.begin("ui", false);
+    prefs.begin("ui", false); //*
 
     for(int i = 0; i < MAX_SLOTS; i++){
         slots[i] = (WidgetType)prefs.getUInt(("slot" + String(i)).c_str(), WIDGET_NONE);
@@ -377,6 +388,7 @@ void setup(){
     current_theme_color = lv_color_hex(prefs.getUInt("btn_color", 0x2196F3));
 
     useFahrenheit = prefs.getBool("useF", false);
+
 
 
     //SETTINGS SCREEN BUTTON
@@ -408,7 +420,7 @@ void setup(){
     lv_obj_t *btn_blue = lv_btn_create(settings_scrn);
     lv_obj_set_size(btn_blue, 30, 30);
     lv_obj_align(btn_blue, LV_ALIGN_TOP_LEFT, 160, 45);
-    lv_obj_set_style_bg_color(btn_blue, lv_color_hex(0x0000FF), 0);
+    lv_obj_set_style_bg_color(btn_blue, lv_color_hex(0x0000FF), 0);  //my blue
 
     //Theme click handler
     auto theme_event = [](lv_event_t * e){
@@ -459,6 +471,8 @@ void setup(){
     //switch for temp
     lv_obj_t *temp_switch = lv_switch_create(settings_scrn);
     lv_obj_align(temp_switch, LV_ALIGN_TOP_RIGHT, -20, 165);
+    lv_obj_set_style_bg_color(temp_switch, lv_color_hex(0x0000FF), LV_PART_INDICATOR | LV_STATE_CHECKED);
+
 
     //set initial state
     if(useFahrenheit){
@@ -487,15 +501,12 @@ void setup(){
 
 //--------------------------- WiFi ---------------------------
 void handleWiFi(){
-
   if(WiFi.status() != WL_CONNECTED){
-
 
       digitalWrite(wifiRedLed, HIGH);
       digitalWrite(wifiGrnLed, LOW);
 
       lv_img_set_src(wifi_img, &wifiOFF);
-
   }
   else{
       digitalWrite(wifiGrnLed, HIGH);
@@ -505,29 +516,6 @@ void handleWiFi(){
   }
 }
 
-
-//old
-/*void updateHumidity(){
-    static uint32_t lastUpdate = 0;
-    if(millis() - lastUpdate < 4000) return;
-    lastUpdate = millis();
-
-    float h = dht.readHumidity();
-    if(isnan(h)) return;
-
-    char buf[32];
-    sprintf(buf, "Hum: %.1f%%", h);
-
-    for(int i = 0; i < MAX_SLOTS; i++){
-        if(slots[i] == WIDGET_HUMIDITY_ARC && slot_obj[i]){
-            lv_arc_set_value(slot_obj[i], (int)h);
-        }
-
-        if(slots[i] == WIDGET_HUMIDITY_TEXT && slot_label[i]){
-            lv_label_set_text(slot_label[i], buf);
-        }
-    }
-}*/
 
 //untested for both units
 void updateHumidity(){
