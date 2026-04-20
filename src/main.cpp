@@ -201,13 +201,23 @@ void build_main_screen(){
 
     //WiFi button
     lv_obj_t *btn_wifi = lv_btn_create(main_scrn);
-    lv_obj_set_size(btn_wifi, 40, 40);
-    lv_obj_align(btn_wifi, LV_ALIGN_BOTTOM_RIGHT, 0, -10);
+    lv_obj_set_size(btn_wifi, 80, 40);
+    lv_obj_align(btn_wifi, LV_ALIGN_BOTTOM_MID, 0, -10); //-20 instead?
     lv_obj_set_style_bg_color(btn_wifi, lv_color_hex(0x0000FF), 0);
 
-    lv_obj_t *wifi_lbl = lv_label_create(btn_wifi);
-    lv_label_set_text(wifi_lbl, "WiFi");
-    lv_obj_center(wifi_lbl);
+    lv_obj_t *lbl_wifi = lv_label_create(btn_wifi);
+    lv_label_set_text(lbl_wifi, LV_SYMBOL_WIFI);
+    lv_obj_center(lbl_wifi);
+
+    //Stats button
+    lv_obj_t *btn_stat = lv_btn_create(main_scrn);
+    lv_obj_set_size(btn_stat, 40, 40);
+    lv_obj_align(btn_stat, LV_ALIGN_BOTTOM_RIGHT, 0, -10);
+    lv_obj_set_style_bg_color(btn_stat, lv_color_hex(0x0000FF), 0);
+
+    lv_obj_t *stat_lbl = lv_label_create(btn_stat);
+    lv_label_set_text(stat_lbl, "Stats");
+    lv_obj_center(stat_lbl);
 
 
     //Settings button
