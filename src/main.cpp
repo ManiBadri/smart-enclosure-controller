@@ -126,8 +126,55 @@ void apply_theme_color(lv_color_t color){
 
 //building wifi
 void build_wifi_screen(){
+
     wifi_scrn = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(wifi_scrn, lv_color_black(), 0);
+
+    //Title
+    lv_obj_t *title = lv_label_create(wifi_scrn);
+    lv_label_set_text(title, "Available WiFi");
+    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_set_style_text_color(title, lv_color_white(), 0);
+
+    //List container (where they go in)
+    lv_obj_t *list = lv_list_create(wifi_scrn);
+    lv_obj_set_size(list, 220, 200);
+    lv_obj_align(list, LV_ALIGN_TOP_MID, 0, 40);
+
+    //Show scanning text
+    lv_obj_t *loading = lv_label_create(wifi_scrn);
+    lv_label_set_text(loading, "Scanning...");
+    lv_obj_align(loading, LV_ALIGN_CENTER, 0, 0);
+
+    lv_scr_load(wifi_scrn);
+
+    //Scan networks
+    int n = WiFi.scanNetworks();
+
+    lv_obj_del(loading); // remove "Scanning..."
+
+    if(n == 0){
+        lv_list_add_text(list, "No networks found");
+    } else {
+        for(int i = 0; i < n; i++){
+
+            String ssid = WiFi.SSID(i);
+
+            lv_obj_t *btn = lv_list_add_btn(list, LV_SYMBOL_WIFI, ssid.c_str());
+
+            // click event
+            /*lv_obj_add_event_cb(btn, [](lv_event_t * e){
+
+                const char *ssid = lv_list_get_btn_text(lv_event_get_target(e));
+
+                Serial.print("Selected: ");
+                Serial.println(ssid);
+
+                //add later - open password screen
+
+            }, LV_EVENT_CLICKED, NULL);*/
+        }
+    }
 
 
     //Back button
