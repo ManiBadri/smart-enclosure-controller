@@ -42,6 +42,7 @@ static lv_color_t buf[SCREEN_WIDTH * 10];
 lv_obj_t *main_scrn;
 lv_obj_t *settings_scrn;
 lv_obj_t *edit_scrn;
+lv_obj_t *wifi_scrn;
 
 //Buttons (global for theme)
 lv_obj_t *stnBtn;
@@ -55,6 +56,10 @@ lv_obj_t *wifi_img;
 
 //Theme
 lv_color_t current_theme_color;
+
+//build screen declarations
+void build_wifi_screen();
+void build_edit_screen();
 
 //for the widget slots
 lv_obj_t* slot_obj[MAX_SLOTS];   // main widget (arc, bar, etc.)
@@ -117,6 +122,26 @@ void apply_theme_color(lv_color_t color){
     if(stnBtn) lv_obj_set_style_bg_color(stnBtn, color, 0);
     if(statBtn) lv_obj_set_style_bg_color(statBtn, color, 0);
     if(home_btn) lv_obj_set_style_bg_color(home_btn, color, 0);
+}
+
+//building wifi
+void build_wifi_screen(){
+    wifi_scrn = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(wifi_scrn, lv_color_black(), 0);
+
+
+    //Back button
+    lv_obj_t *back = lv_btn_create(wifi_scrn);
+    lv_obj_align(back, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
+
+    lv_obj_t *lbl = lv_label_create(back);
+    lv_label_set_text(lbl, LV_SYMBOL_HOME);
+    lv_obj_center(lbl);
+
+    lv_obj_add_event_cb(back, [](lv_event_t * e){
+        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 300, 0, false);
+    }, LV_EVENT_CLICKED, NULL);
+
 }
 
 //--------------------------- WIDGET CREATION ---------------------------
@@ -202,12 +227,17 @@ void build_main_screen(){
     //WiFi button
     lv_obj_t *btn_wifi = lv_btn_create(main_scrn);
     lv_obj_set_size(btn_wifi, 80, 40);
-    lv_obj_align(btn_wifi, LV_ALIGN_BOTTOM_MID, 0, -10); //-20 instead?
+    lv_obj_align(btn_wifi, LV_ALIGN_BOTTOM_MID, 0, -10); //-10 instead?
     lv_obj_set_style_bg_color(btn_wifi, lv_color_hex(0x0000FF), 0);
 
     lv_obj_t *lbl_wifi = lv_label_create(btn_wifi);
     lv_label_set_text(lbl_wifi, LV_SYMBOL_WIFI);
     lv_obj_center(lbl_wifi);
+
+    lv_obj_add_event_cb(btn_wifi, [](lv_event_t * e){
+        build_wifi_screen();
+        lv_scr_load_anim(wifi_scrn, LV_SCR_LOAD_ANIM_MOVE_TOP, 300, 0, false);
+    }, LV_EVENT_CLICKED, NULL);
 
     //Stats button
     lv_obj_t *btn_stat = lv_btn_create(main_scrn);
@@ -236,8 +266,8 @@ void build_main_screen(){
     apply_theme_color(current_theme_color);
 }
 
-//--------------------------- EDIT SCREEN ---------------------------
-void build_edit_screen();
+
+
 
 void slot_click_event(lv_event_t * e){
     int index = (int)lv_event_get_user_data(e);
@@ -292,13 +322,12 @@ void open_add_menu(int slot_index){
 //edit screen plus and x signs (for now)
 void build_edit_screen(){
 
-
     edit_scrn = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(edit_scrn, lv_color_black(), 0);
 
     for(int i = 0; i < MAX_SLOTS; i++){
 
-        //creating the buttons    
+        //creating the buttons
         lv_obj_t *btn = lv_btn_create(edit_scrn);
         lv_obj_set_size(btn, 60, 60);
         lv_obj_set_pos(btn, slot_pos[i].x - 30, slot_pos[i].y - 30);
@@ -399,10 +428,7 @@ void setup(){
 
     useFahrenheit = prefs.getBool("useF", false);
 
-
-
     //SETTINGS SCREEN BUTTON
-    //--------------------------- SETTINGS SCREEN UI ---------------------------
 
     //Title
     lv_obj_t *title = lv_label_create(settings_scrn);
