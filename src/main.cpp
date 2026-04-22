@@ -16,11 +16,9 @@
 const char* ssid = "money2.4";
 const char* password = "money123";
 
-
 //WiFi LED
 const int wifiRedLed = 32;
 const int wifiGrnLed = 26;
-
 
 //DHT
 #define DHTPIN 33
@@ -124,31 +122,31 @@ void apply_theme_color(lv_color_t color){
     if(home_btn) lv_obj_set_style_bg_color(home_btn, color, 0);
 }
 
-//building wifi
+//--------------------------- WIFI Screen UI ---------------------------
 void build_wifi_screen(){
 
     wifi_scrn = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(wifi_scrn, lv_color_black(), 0);
 
-    //Title
+    //title
     lv_obj_t *title = lv_label_create(wifi_scrn);
     lv_label_set_text(title, "Available WiFi");
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
     lv_obj_set_style_text_color(title, lv_color_white(), 0);
 
-    //List container (where they go in)
+    //list container (where they go in)
     lv_obj_t *list = lv_list_create(wifi_scrn);
     lv_obj_set_size(list, 220, 200);
     lv_obj_align(list, LV_ALIGN_TOP_MID, 0, 40);
 
-    //Show scanning text
+    //show scanning text
     lv_obj_t *loading = lv_label_create(wifi_scrn);
     lv_label_set_text(loading, "Scanning...");
     lv_obj_align(loading, LV_ALIGN_CENTER, 0, 0);
 
     lv_scr_load(wifi_scrn);
 
-    //Scan networks
+    //scan networks
     int n = WiFi.scanNetworks();
 
     lv_obj_del(loading); // remove "Scanning..."
@@ -162,7 +160,7 @@ void build_wifi_screen(){
 
             lv_obj_t *btn = lv_list_add_btn(list, LV_SYMBOL_WIFI, ssid.c_str());
 
-            // click event
+            //click event
             /*lv_obj_add_event_cb(btn, [](lv_event_t * e){
 
                 const char *ssid = lv_list_get_btn_text(lv_event_get_target(e));
@@ -177,7 +175,7 @@ void build_wifi_screen(){
     }
 
 
-    //Back button
+    //back button
     lv_obj_t *back = lv_btn_create(wifi_scrn);
     lv_obj_align(back, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
 
@@ -313,9 +311,7 @@ void build_main_screen(){
     apply_theme_color(current_theme_color);
 }
 
-
-
-
+//--------------------------- Event For Clicking Slots ---------------------------
 void slot_click_event(lv_event_t * e){
     int index = (int)lv_event_get_user_data(e);
 
@@ -328,6 +324,7 @@ void slot_click_event(lv_event_t * e){
     }
 }
 
+//--------------------------- PopUp widget Add Screen UI ---------------------------
 void open_add_menu(int slot_index){
 
     //add selector pop up menu
@@ -366,6 +363,7 @@ void open_add_menu(int slot_index){
     }
 }
 
+//--------------------------- Edit Screen UI ---------------------------
 //edit screen plus and x signs (for now)
 void build_edit_screen(){
 
@@ -599,8 +597,7 @@ void handleWiFi(){
   }
 }
 
-
-//untested for both units
+//--------------------------- Humidity Update ---------------------------
 void updateHumidity(){
     static uint32_t lastUpdate = 0;
 
@@ -634,7 +631,7 @@ void updateHumidity(){
     }
 }
 
-
+//--------------------------- Temp Update ---------------------------
 void updateTemperature(){
     static uint32_t lastUpdate = 0;
 
