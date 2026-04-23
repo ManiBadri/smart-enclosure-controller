@@ -59,6 +59,8 @@ lv_color_t current_theme_color;
 void build_wifi_screen();
 void build_edit_screen();
 
+void open_wifi_password_popup(char *ssid);
+
 //for the widget slots
 lv_obj_t* slot_obj[MAX_SLOTS];   // main widget (arc, bar, etc.)
 lv_obj_t* slot_label[MAX_SLOTS]; // for text widgets (optional)
@@ -122,6 +124,12 @@ void apply_theme_color(lv_color_t color){
     if(home_btn) lv_obj_set_style_bg_color(home_btn, color, 0);
 }
 
+struct WifiConnectData {
+    char* ssid;
+    lv_obj_t* ta;
+};
+
+
 //--------------------------- WIFI Screen UI ---------------------------
 void build_wifi_screen(){
 
@@ -147,7 +155,7 @@ void build_wifi_screen(){
     lv_scr_load(wifi_scrn);
 
     //scan networks
-    int n = WiFi.scanNetworks(true); //what does true do?
+    int n = WiFi.scanNetworks(); //what does true do?
 
     lv_obj_del(loading); // remove "Scanning..."
 
@@ -169,13 +177,17 @@ void build_wifi_screen(){
                 }
             }
 
-            if(duplicate == false){ //makes sure only non duplicates are shown
+            if(duplicate == false){
                 seen[seenCount++] = ssid;
+
                 lv_obj_t *btn = lv_list_add_btn(list, LV_SYMBOL_WIFI, ssid.c_str());
-                lv_obj_add_event_cb(btn, [](lv_event_t * e){ //event
-                    const char *ssid = lv_list_get_btn_text(lv_event_get_target(e));
-                    open_wifi_password_popup(strdup(ssid));
-                }, LV_EVENT_CLICKED, NULL);
+
+                char* ssid_copy = strdup(ssid.c_str());
+
+                lv_obj_add_event_cb(btn, [](lv_event_t * e){
+                    char* ssid = (char*)lv_event_get_user_data(e);
+                    open_wifi_password_popup(ssid);
+                }, LV_EVENT_CLICKED, ssid_copy);
             }
 
 
@@ -228,12 +240,16 @@ void open_wifi_password_popup(char *ssid){
     lv_obj_set_size(ta, 180, 40);
     lv_obj_align(ta, LV_ALIGN_TOP_MID, 0, 50);
     lv_textarea_set_password_mode(ta, true);
-    lv_textarea_set_placeholder_text(ta, "Password");
 
     //keyboard
     lv_obj_t *kb = lv_keyboard_create(bg);
     lv_keyboard_set_textarea(kb, ta);
     lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 0);
+
+    //NOW create data AFTER ta exists
+    WifiConnectData* data = new WifiConnectData;
+    data->ssid = ssid;
+    data->ta = ta;
 
     //connect button
     lv_obj_t *btn = lv_btn_create(box);
@@ -244,17 +260,22 @@ void open_wifi_password_popup(char *ssid){
     lv_label_set_text(btn_lbl, "Connect");
     lv_obj_center(btn_lbl);
 
+    //Correct callback
     lv_obj_add_event_cb(btn, [](lv_event_t * e){
 
-        lv_obj_t *ta = (lv_obj_t*)lv_event_get_user_data(e);
-        const char *password = lv_textarea_get_text(ta);
+        WifiConnectData* data = (WifiConnectData*)lv_event_get_user_data(e);
 
-        Serial.print("Connecting with password: ");
-        Serial.println(password);
+        const char *password = lv_textarea_get_text(data->ta);
 
-        WiFi.begin(ssid, password); //not work
+        Serial.print("Connecting to: ");
+        Serial.println(data->ssid);
 
-    }, LV_EVENT_CLICKED, ta);
+        WiFi.begin(data->ssid, password);
+
+        free(data->ssid);
+        delete data;
+
+    }, LV_EVENT_CLICKED, data);
 }
 
 //--------------------------- Widget Creation ---------------------------
