@@ -147,37 +147,50 @@ void build_wifi_screen(){
     lv_scr_load(wifi_scrn);
 
     //scan networks
-    int n = WiFi.scanNetworks();
+    int n = WiFi.scanNetworks(true); //what does true do?
 
     lv_obj_del(loading); // remove "Scanning..."
 
     if(n == 0){
         lv_list_add_text(list, "No networks found");
     } else {
+        String seen[20]; // to make string array and hold all the unique SSID
+        int seenCount = 0;
         for(int i = 0; i < n; i++){
 
             String ssid = WiFi.SSID(i);
 
-            lv_obj_t *btn = lv_list_add_btn(list, LV_SYMBOL_WIFI, ssid.c_str());
+            bool duplicate = false;
+
+            for(int j = 0; j < seenCount; j++){
+                if(seen[j] == ssid){
+                    duplicate = true;
+                    break;
+                }
+            }
+
+            if(duplicate == false){ //makes sure only non duplicates are shown
+                seen[seenCount++] = ssid;
+                lv_obj_t *btn = lv_list_add_btn(list, LV_SYMBOL_WIFI, ssid.c_str());
+                lv_obj_add_event_cb(btn, [](lv_event_t * e){ //event
+                    const char *ssid = lv_list_get_btn_text(lv_event_get_target(e));
+                    open_wifi_password_popup(strdup(ssid));
+                }, LV_EVENT_CLICKED, NULL);
+            }
+
+
+            //delay(500); //testing
 
             //click event
-            /*lv_obj_add_event_cb(btn, [](lv_event_t * e){
 
-                const char *ssid = lv_list_get_btn_text(lv_event_get_target(e));
-
-                Serial.print("Selected: ");
-                Serial.println(ssid);
-
-                //add later - open password screen
-
-            }, LV_EVENT_CLICKED, NULL);*/
         }
     }
-
+    
 
     //back button
     lv_obj_t *back = lv_btn_create(wifi_scrn);
-    lv_obj_align(back, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
+    lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_size(back, 180, 40);
 
     lv_obj_t *lbl = lv_label_create(back);
     lv_label_set_text(lbl, LV_SYMBOL_HOME);
@@ -189,10 +202,64 @@ void build_wifi_screen(){
 
 }
 
-//--------------------------- WIDGET CREATION ---------------------------
+
+
+//--------------------------- Wifi Password ---------------------------
+void open_wifi_password_popup(char *ssid){
+
+    //dark overlay
+    lv_obj_t *bg = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(bg, SCREEN_WIDTH, SCREEN_HEIGHT);
+    lv_obj_set_style_bg_color(bg, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(bg, LV_OPA_70, 0);
+
+    //popup container
+    lv_obj_t *box = lv_obj_create(bg);
+    lv_obj_set_size(box, 200, 180);
+    lv_obj_center(box);
+
+    //title
+    lv_obj_t *label = lv_label_create(box);
+    lv_label_set_text_fmt(label, "Connect to:\n%s", ssid);
+    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 5);
+
+    //text input
+    lv_obj_t *ta = lv_textarea_create(box);
+    lv_obj_set_size(ta, 180, 40);
+    lv_obj_align(ta, LV_ALIGN_TOP_MID, 0, 50);
+    lv_textarea_set_password_mode(ta, true);
+    lv_textarea_set_placeholder_text(ta, "Password");
+
+    //keyboard
+    lv_obj_t *kb = lv_keyboard_create(bg);
+    lv_keyboard_set_textarea(kb, ta);
+    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 0);
+
+    //connect button
+    lv_obj_t *btn = lv_btn_create(box);
+    lv_obj_set_size(btn, 80, 30);
+    lv_obj_align(btn, LV_ALIGN_BOTTOM_MID, 0, -10);
+
+    lv_obj_t *btn_lbl = lv_label_create(btn);
+    lv_label_set_text(btn_lbl, "Connect");
+    lv_obj_center(btn_lbl);
+
+    lv_obj_add_event_cb(btn, [](lv_event_t * e){
+
+        lv_obj_t *ta = (lv_obj_t*)lv_event_get_user_data(e);
+        const char *password = lv_textarea_get_text(ta);
+
+        Serial.print("Connecting with password: ");
+        Serial.println(password);
+
+        WiFi.begin(ssid, password); //not work
+
+    }, LV_EVENT_CLICKED, ta);
+}
+
+//--------------------------- Widget Creation ---------------------------
 void create_widget_for_slot(int i){
     switch(slots[i]){
-
         case WIDGET_HUMIDITY_ARC:{
             lv_obj_t *arc = lv_arc_create(main_scrn);
             lv_obj_set_size(arc, 50, 50);
@@ -324,7 +391,7 @@ void slot_click_event(lv_event_t * e){
     }
 }
 
-//--------------------------- PopUp widget Add Screen UI ---------------------------
+//--------------------------- Add and Delete Widget Screen ---------------------------
 void open_add_menu(int slot_index){
 
     //add selector pop up menu
