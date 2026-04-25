@@ -228,7 +228,9 @@ void open_wifi_password_popup(char *ssid){
     //popup container
     lv_obj_t *box = lv_obj_create(bg);
     lv_obj_set_size(box, 200, 180);
-    lv_obj_center(box);
+    //lv_obj_center(box);
+    lv_obj_align(box,0,0,0);
+    
 
     //title
     lv_obj_t *label = lv_label_create(box);
@@ -244,9 +246,9 @@ void open_wifi_password_popup(char *ssid){
     //keyboard
     lv_obj_t *kb = lv_keyboard_create(bg);
     lv_keyboard_set_textarea(kb, ta);
-    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 10);
 
-    //NOW create data AFTER ta exists
+    //create data AFTER ta exists
     WifiConnectData* data = new WifiConnectData;
     data->ssid = ssid;
     data->ta = ta;
