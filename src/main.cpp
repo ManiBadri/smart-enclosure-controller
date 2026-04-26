@@ -34,7 +34,7 @@ bool useFahrenheit = false;
 //TFT + LVGL
 TFT_eSPI tft = TFT_eSPI();
 static lv_disp_draw_buf_t draw_buf;
-static lv_color_t buf[SCREEN_WIDTH * 10];
+static lv_color_t buf[SCREEN_WIDTH * 5];
 
 //Screens
 lv_obj_t *main_scrn;
@@ -182,6 +182,7 @@ void build_wifi_screen(){
 
                 lv_obj_t *btn = lv_list_add_btn(list, LV_SYMBOL_WIFI, ssid.c_str());
 
+                static String ssid_store[20];
                 char* ssid_copy = strdup(ssid.c_str());
 
                 lv_obj_add_event_cb(btn, [](lv_event_t * e){
@@ -506,6 +507,7 @@ void build_edit_screen(){
 
 //--------------------------- SETUP ---------------------------
 void setup(){
+    Serial.println(esp_reset_reason());
 
     Serial.begin(115200);
 
@@ -526,7 +528,7 @@ void setup(){
 
     lv_init();
 
-    lv_disp_draw_buf_init(&draw_buf, buf, NULL, SCREEN_WIDTH * 10);
+    lv_disp_draw_buf_init(&draw_buf, buf, NULL, SCREEN_WIDTH * 5);
 
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
@@ -540,7 +542,16 @@ void setup(){
     lv_indev_drv_init(&indev_drv);
 
     uint16_t calData[5];
-    tft.calibrateTouch(calData, TFT_MAGENTA, TFT_BLACK, 15);
+    //tft.calibrateTouch(calData, TFT_MAGENTA, TFT_BLACK, 15);
+
+    if(prefs.getBool("calibrated", false)){
+        prefs.getBytes("calData", calData, sizeof(calData));
+        tft.setTouch(calData);
+    } else {
+        tft.calibrateTouch(calData, TFT_MAGENTA, TFT_BLACK, 15);
+        prefs.putBytes("calData", calData, sizeof(calData));
+        prefs.putBool("calibrated", true);
+    }
     tft.setTouch(calData);
 
     indev_drv.type = LV_INDEV_TYPE_POINTER;
@@ -564,6 +575,9 @@ void setup(){
     useFahrenheit = prefs.getBool("useF", false);
 
     //SETTINGS SCREEN BUTTON
+
+    Serial.println(esp_reset_reason());
+
 
     //Title
     lv_obj_t *title = lv_label_create(settings_scrn);
@@ -662,6 +676,9 @@ void setup(){
 
     build_main_screen();
     lv_scr_load(main_scrn);
+
+    Serial.println(esp_reset_reason());
+
 
     //force first draw
     lv_timer_handler();   
