@@ -20,6 +20,10 @@ const char* password = "money123";
 const int wifiRedLed = 32;
 const int wifiGrnLed = 26;
 
+//Dimentions
+//const int screenWidth = 0;
+//const int screenHeight = 0;
+
 //DHT
 #define DHTPIN 33
 #define DHTTYPE DHT22
@@ -81,6 +85,7 @@ lv_point_t slot_pos[MAX_SLOTS] = {
     {50, 60}, {50, 140}, {50, 220},
     {160, 60}, {160, 140}, {160, 220}
 };
+
 
 //--------------------------- DISPLAY ---------------------------
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p){
@@ -217,7 +222,7 @@ void build_wifi_screen(){
 
 
 
-//--------------------------- Wifi Password ---------------------------
+//--------------------------- Wifi Password UI---------------------------
 void open_wifi_password_popup(char *ssid){
 
     //dark overlay
@@ -228,8 +233,8 @@ void open_wifi_password_popup(char *ssid){
 
     //popup container
     lv_obj_t *box = lv_obj_create(bg);
-    lv_obj_set_size(box, 200, 180);
-    //lv_obj_center(box);
+    lv_obj_set_size(box, 200, 90);
+    lv_obj_align(box, LV_ALIGN_TOP_MID, 0, 10);
     lv_obj_align(box,0,0,0);
     
 
@@ -237,10 +242,11 @@ void open_wifi_password_popup(char *ssid){
     lv_obj_t *label = lv_label_create(box);
     lv_label_set_text_fmt(label, "Connect to:\n%s", ssid);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 5);
+    
 
     //text input
     lv_obj_t *ta = lv_textarea_create(box);
-    lv_obj_set_size(ta, 180, 40);
+    lv_obj_set_size(ta, 180, 20);
     lv_obj_align(ta, LV_ALIGN_TOP_MID, 0, 50);
     lv_textarea_set_password_mode(ta, true);
 
@@ -248,6 +254,7 @@ void open_wifi_password_popup(char *ssid){
     lv_obj_t *kb = lv_keyboard_create(bg);
     lv_keyboard_set_textarea(kb, ta);
     lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 10);
+    lv_obj_set_size(kb,SCREEN_WIDTH - 5,SCREEN_HEIGHT/2); //obj,w,h
 
     //create data AFTER ta exists
     WifiConnectData* data = new WifiConnectData;
@@ -256,8 +263,8 @@ void open_wifi_password_popup(char *ssid){
 
     //connect button
     lv_obj_t *btn = lv_btn_create(box);
-    lv_obj_set_size(btn, 80, 30);
-    lv_obj_align(btn, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_size(btn, 80, 20);
+    lv_obj_align(btn, LV_ALIGN_BOTTOM_MID, 0, 0);
 
     lv_obj_t *btn_lbl = lv_label_create(btn);
     lv_label_set_text(btn_lbl, "Connect");
