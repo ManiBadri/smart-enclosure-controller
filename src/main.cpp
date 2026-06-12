@@ -242,12 +242,13 @@ void open_wifi_password_popup(char *ssid){
 
     //title
     lv_obj_t *label = lv_label_create(box);
-    lv_label_set_text_fmt(label, "Connect to:\n%s", ssid);
+    lv_label_set_text_fmt(label, "Enter Password", ssid);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 5);
     
 
     //text input
     lv_obj_t *ta = lv_textarea_create(box);
+    lv_obj_clear_flag(ta, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(ta, 180, 20);
     lv_obj_align(ta, LV_ALIGN_TOP_MID, 0, 25);
     lv_textarea_set_password_mode(ta, true);
@@ -255,9 +256,9 @@ void open_wifi_password_popup(char *ssid){
     //keyboard
     lv_obj_t *kb = lv_keyboard_create(bg);
     lv_keyboard_set_textarea(kb, ta);
-    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, -3); //ngative to bring more up 
-    lv_obj_set_size(kb, SCREEN_WIDTH - 15, SCREEN_HEIGHT/2); 
-    lv_obj_set_style_opa(kb, LV_OPA_COVER, 0);//testing
+    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 14); //ngative to bring more up 
+    lv_obj_set_size(kb, SCREEN_WIDTH - 6, SCREEN_HEIGHT/2); 
+    lv_obj_set_style_opa(kb, LV_OPA_COVER, 0); //testing
     lv_obj_clear_flag(kb, LV_OBJ_FLAG_SCROLLABLE); 
 
     //create data after ta exists
