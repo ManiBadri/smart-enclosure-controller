@@ -227,15 +227,17 @@ void open_wifi_password_popup(char *ssid){
 
     //dark overlay
     lv_obj_t *bg = lv_obj_create(lv_scr_act());
+    lv_obj_clear_flag(bg, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(bg, SCREEN_WIDTH, SCREEN_HEIGHT);
     lv_obj_set_style_bg_color(bg, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(bg, LV_OPA_70, 0);
 
     //popup container
     lv_obj_t *box = lv_obj_create(bg);
-    lv_obj_set_size(box, 200, 90);
-    lv_obj_align(box, LV_ALIGN_TOP_MID, 0, 10);
-    lv_obj_align(box,0,0,0);
+    lv_obj_set_size(box, 200, 100);
+    lv_obj_align(box, LV_ALIGN_TOP_MID, 0, 0); 
+    lv_obj_clear_flag(box, LV_OBJ_FLAG_SCROLLABLE);
+    //lv_obj_align(box,0,0,0);
     
 
     //title
@@ -247,16 +249,18 @@ void open_wifi_password_popup(char *ssid){
     //text input
     lv_obj_t *ta = lv_textarea_create(box);
     lv_obj_set_size(ta, 180, 20);
-    lv_obj_align(ta, LV_ALIGN_TOP_MID, 0, 50);
+    lv_obj_align(ta, LV_ALIGN_TOP_MID, 0, 25);
     lv_textarea_set_password_mode(ta, true);
 
     //keyboard
     lv_obj_t *kb = lv_keyboard_create(bg);
     lv_keyboard_set_textarea(kb, ta);
-    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 10);
-    lv_obj_set_size(kb,SCREEN_WIDTH - 5,SCREEN_HEIGHT/2); //obj,w,h
+    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, -3); //ngative to bring more up 
+    lv_obj_set_size(kb, SCREEN_WIDTH - 15, SCREEN_HEIGHT/2); 
+    lv_obj_set_style_opa(kb, LV_OPA_COVER, 0);//testing
+    lv_obj_clear_flag(kb, LV_OBJ_FLAG_SCROLLABLE); 
 
-    //create data AFTER ta exists
+    //create data after ta exists
     WifiConnectData* data = new WifiConnectData;
     data->ssid = ssid;
     data->ta = ta;
@@ -567,6 +571,7 @@ void setup(){
 
     main_scrn = lv_scr_act();
     settings_scrn = lv_obj_create(NULL);
+
 
     lv_obj_set_style_bg_color(main_scrn, lv_color_black(), 0);
     lv_obj_set_style_bg_color(settings_scrn, lv_color_black(), 0);
