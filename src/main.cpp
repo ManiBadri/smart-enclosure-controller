@@ -2,10 +2,14 @@
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 
+
+//if adding something that needs to be installed add it to platformio.ini
 #include <Arduino.h>
 #include <WiFi.h>
 #include <DHT.h>
 #include <Preferences.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h> 
 
 #define SCREEN_WIDTH 240
 #define SCREEN_HEIGHT 320
@@ -23,6 +27,9 @@ const int wifiGrnLed = 26;
 //Dimentions
 //const int screenWidth = 0;
 //const int screenHeight = 0;
+
+//Terminal LCD screen
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 //DHT
 #define DHTPIN 33
@@ -519,6 +526,14 @@ void build_edit_screen(){
 
 //--------------------------- SETUP ---------------------------
 void setup(){
+
+    //setting up debug terminal LCD ports
+    Wire.begin(21,22); //SDA,SCL
+
+    lcd.init();
+    lcd.backlight();
+    lcd.print("hello");
+
     Serial.println(esp_reset_reason());
 
     Serial.begin(115200);

@@ -17,3 +17,10 @@ T-CS    D25
 T-DIN   D23
 
 T-D0    D19
+
+
+ESP32               LCD
+VIN (5V) ---------> VCC
+GND ---------------> GND
+GPIO21 -----------> SDA
+GPIO22 -----------> SCL
