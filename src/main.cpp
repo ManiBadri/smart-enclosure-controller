@@ -706,6 +706,8 @@ void setup(){
     lv_scr_load(main_scrn);
 
     Serial.println(esp_reset_reason());
+    
+    lcd.clear();
 
 
     //force first draw
@@ -717,19 +719,23 @@ void setup(){
 
 //--------------------------- WiFi ---------------------------
 void handleWiFi(){
-  if(WiFi.status() != WL_CONNECTED){
+    if(WiFi.status() != WL_CONNECTED){
+        digitalWrite(wifiRedLed, HIGH);
+        digitalWrite(wifiGrnLed, LOW);
+        lv_img_set_src(wifi_img, &wifiOFF);
+    }
+    else{
 
-      digitalWrite(wifiRedLed, HIGH);
-      digitalWrite(wifiGrnLed, LOW);
+        digitalWrite(wifiGrnLed, HIGH);
+        digitalWrite(wifiRedLed, LOW);
 
-      lv_img_set_src(wifi_img, &wifiOFF);
-  }
-  else{
-      digitalWrite(wifiGrnLed, HIGH);
-      digitalWrite(wifiRedLed, LOW);
+        //need to fine a way for it to be cleared only when value changing 
+        lcd.print(WiFi.BSSIDstr());
+        lcd.setCursor(0,1);
+        lcd.print(WiFi.getHostname());
 
-      lv_img_set_src(wifi_img, &wifiON);
-  }
+        lv_img_set_src(wifi_img, &wifiON);
+    }
 }
 
 //--------------------------- Humidity Update ---------------------------
