@@ -730,9 +730,9 @@ void handleWiFi(){
         digitalWrite(wifiRedLed, LOW);
 
         //need to fine a way for it to be cleared only when value changing 
-        lcd.print(WiFi.BSSIDstr());
+        lcd.print(WiFi.SSID());
         lcd.setCursor(0,1);
-        lcd.print(WiFi.getHostname());
+        lcd.print(WiFi.status());
 
         lv_img_set_src(wifi_img, &wifiON);
     }
