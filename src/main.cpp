@@ -55,6 +55,7 @@ lv_obj_t *edit_scrn;
 lv_obj_t *wifi_scrn;
 
 //Buttons (global for theme)
+//need better way later to add buttons
 lv_obj_t *stnBtn;
 lv_obj_t *statBtn;
 lv_obj_t *home_btn;
@@ -66,8 +67,10 @@ lv_obj_t *wifi_img;
 
 
 //Colors
+//BUG: color not consistent with border, with lsit and item, check code?
 lv_color_t wifiBoxColor = lv_color_hex(0x52525c);
-lv_color_t borderColor = lv_color_hex(0xe9e6e8);
+lv_color_t borderColor = lv_color_hex(0x3cb371);
+
 
 
 //uint32_t wifiBoxColor = 0xff0000;
@@ -170,6 +173,7 @@ void build_wifi_screen(){
     lv_obj_align(list, LV_ALIGN_TOP_MID, 0, 40);
     //lv_obj_get_style_bg_color(list, wifiBoxColor); 
     lv_obj_set_style_bg_color(list, wifiBoxColor, 0); //only out bar not the items
+    lv_obj_set_style_border_color(list, borderColor, 0);
 
 
     //show scanning text
@@ -207,7 +211,9 @@ void build_wifi_screen(){
 
                 lv_obj_t *btn = lv_list_add_btn(list, LV_SYMBOL_WIFI, ssid.c_str());
                 lv_obj_set_style_bg_color(btn, wifiBoxColor, 0);
-                lv_obj_set_style_border_color(btn, wifiBoxColor,0);
+                //lv_obj_set_style_border_color(btn, wifiBoxColor,0);
+                lv_obj_set_style_arc_color(btn, wifiBoxColor,0);
+                
 
                 static String ssid_store[20];
                 char* ssid_copy = strdup(ssid.c_str());
@@ -256,7 +262,7 @@ void open_wifi_password_popup(char *ssid){
 
     //popup container
     lv_obj_t *box = lv_obj_create(bg);
-    lv_obj_set_size(box, 200, 100);
+    lv_obj_set_size(box, 200, 120);
     lv_obj_align(box, LV_ALIGN_TOP_MID, 0, 0); 
     lv_obj_clear_flag(box, LV_OBJ_FLAG_SCROLLABLE);
     //lv_obj_get_style_bg_color(box, wifiBoxColor);
@@ -273,7 +279,7 @@ void open_wifi_password_popup(char *ssid){
     //text input
     lv_obj_t *ta = lv_textarea_create(box);
     lv_obj_clear_flag(ta, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(ta, 180, 20);
+    lv_obj_set_size(ta, 180, 40);
     lv_obj_align(ta, LV_ALIGN_TOP_MID, 0, 25);
     lv_textarea_set_password_mode(ta, true);
 
