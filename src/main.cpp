@@ -19,6 +19,7 @@
 //WiFi
 const char* ssid = "money2.4";
 const char* password = "money123";
+String oldWiFiName = "";
 
 //WiFi LED
 const int wifiRedLed = 32;
@@ -62,6 +63,15 @@ lv_obj_t *home_btn;
 LV_IMG_DECLARE(wifiON);
 LV_IMG_DECLARE(wifiOFF);
 lv_obj_t *wifi_img;
+
+
+//Colors
+lv_color_t wifiBoxColor = lv_color_hex(0x52525c);
+lv_color_t borderColor = lv_color_hex(0xe9e6e8);
+
+
+//uint32_t wifiBoxColor = 0xff0000;
+
 
 //Theme
 lv_color_t current_theme_color;
@@ -155,9 +165,12 @@ void build_wifi_screen(){
     lv_obj_set_style_text_color(title, lv_color_white(), 0);
 
     //list container (where they go in)
-    lv_obj_t *list = lv_list_create(wifi_scrn);
+    lv_obj_t *list = lv_list_create(wifi_scrn);  
     lv_obj_set_size(list, 220, 200);
     lv_obj_align(list, LV_ALIGN_TOP_MID, 0, 40);
+    //lv_obj_get_style_bg_color(list, wifiBoxColor); 
+    lv_obj_set_style_bg_color(list, wifiBoxColor, 0); //only out bar not the items
+
 
     //show scanning text
     lv_obj_t *loading = lv_label_create(wifi_scrn);
@@ -193,6 +206,8 @@ void build_wifi_screen(){
                 seen[seenCount++] = ssid;
 
                 lv_obj_t *btn = lv_list_add_btn(list, LV_SYMBOL_WIFI, ssid.c_str());
+                lv_obj_set_style_bg_color(btn, wifiBoxColor, 0);
+                lv_obj_set_style_border_color(btn, wifiBoxColor,0);
 
                 static String ssid_store[20];
                 char* ssid_copy = strdup(ssid.c_str());
@@ -244,6 +259,8 @@ void open_wifi_password_popup(char *ssid){
     lv_obj_set_size(box, 200, 100);
     lv_obj_align(box, LV_ALIGN_TOP_MID, 0, 0); 
     lv_obj_clear_flag(box, LV_OBJ_FLAG_SCROLLABLE);
+    //lv_obj_get_style_bg_color(box, wifiBoxColor);
+    
     //lv_obj_align(box,0,0,0);
     
 
@@ -283,21 +300,36 @@ void open_wifi_password_popup(char *ssid){
     lv_obj_center(btn_lbl);
 
     //Correct callback
+    //event for wifi connect buttton
     lv_obj_add_event_cb(btn, [](lv_event_t * e){
 
         WifiConnectData* data = (WifiConnectData*)lv_event_get_user_data(e);
 
         const char *password = lv_textarea_get_text(data->ta);
 
-        Serial.print("Connecting to: ");
-        Serial.println(data->ssid);
+        //Serial.print("Connecting to: ");
+        //Serial.println(data->ssid);
 
-        WiFi.begin(data->ssid, password);
+        //BUG: not working
+        WiFi.begin("Here", password); //was data->ssid
+        
+        lcd.clear();
+        lcd.print(password);
 
         free(data->ssid);
         delete data;
 
+        //after return to main screen
+        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_TOP, 300, 0, false);
+
     }, LV_EVENT_CLICKED, data);
+}
+
+
+//--------------------------- Check if wifi password is right ---------------------------
+void wifi_password_check(){
+    WiFi.begin(ssid, password);
+
 }
 
 //--------------------------- Widget Creation ---------------------------
@@ -709,6 +741,10 @@ void setup(){
     
     lcd.clear();
 
+    lcd.print(WiFi.SSID());
+    lcd.setCursor(0,1);
+    lcd.print(WiFi.status());
+
 
     //force first draw
     lv_timer_handler();   
@@ -729,11 +765,13 @@ void handleWiFi(){
         digitalWrite(wifiGrnLed, HIGH);
         digitalWrite(wifiRedLed, LOW);
 
-        //need to fine a way for it to be cleared only when value changing 
-        lcd.print(WiFi.SSID());
-        lcd.setCursor(0,1);
-        lcd.print(WiFi.status());
-
+        //need to find a way for it to be cleared only when value changing 
+        if(oldWiFiName != (WiFi.SSID())){
+            lcd.clear();
+            lcd.print(WiFi.SSID());
+            lcd.setCursor(0,1);
+            lcd.print(WiFi.status());
+        }
         lv_img_set_src(wifi_img, &wifiON);
     }
 }
@@ -814,6 +852,7 @@ void updateTemperature(){
 //--------------------------- LOOP ---------------------------
 void loop(){
     lv_timer_handler();
+    oldWiFiName = WiFi.SSID();
     handleWiFi();
 
     updateHumidity();
