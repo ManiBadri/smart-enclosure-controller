@@ -64,6 +64,7 @@ lv_obj_t *main_scrn;
 lv_obj_t *settings_scrn;
 lv_obj_t *edit_scrn;
 lv_obj_t *wifi_scrn;
+lv_obj_t *stat_scrn;
 
 //Buttons (global for theme)
 //need better way later to add buttons
@@ -411,6 +412,32 @@ void create_widget_for_slot(int i){
         default: break;
     }
 }
+
+//--------------------------- STAT SCREEN UI ---------------------------
+void build_stat_screen(){
+    stat_scrn = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(stat_scrn, lv_color_black(), 0);
+
+
+
+
+
+    //back button
+    lv_obj_t *back = lv_btn_create(stat_scrn);
+    lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_size(back, 180, 40);
+
+    lv_obj_t *lbl = lv_label_create(back);
+    lv_label_set_text(lbl, LV_SYMBOL_HOME);
+    lv_obj_center(lbl);
+
+    lv_obj_add_event_cb(back, [](lv_event_t * e){
+        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
+    }, LV_EVENT_CLICKED, NULL);
+
+
+}
+
 
 //--------------------------- MAIN SCREEN ---------------------------
 void build_main_screen(){
@@ -873,14 +900,8 @@ void save_calibration_data(uint16_t *calData){
     prefs.putBool("calibrated", true);
 }
 
-void sleepHandler(bool sleep){
-    if(sleep){
-
-    }
-    else{
-
-
-    }
+void chart_handler(lv_timer_t * timer){
+    //handle chart updates here if needed
 
 
 
@@ -888,6 +909,9 @@ void sleepHandler(bool sleep){
 
 //--------------------------- LOOP ---------------------------
 void loop(){
+
+    static bool isDimmed = false;
+
     lcd.clear(); 
     lcd.print(lv_disp_get_inactive_time(NULL));
 
@@ -902,12 +926,16 @@ void loop(){
     
     if(lv_disp_get_inactive_time(NULL) < 100000){
 
-        ledcWrite(tftBackLightBrightness, 255);
+        if(isDimmed){
+            ledcWrite(tftBackLightBrightness, 255);
+            isDimmed = false;
+        }
     }
     else{
-
-        ledcWrite(tftBackLightBrightness, 20); //dims the backlight after certain time of inactivity
-        
+        if(!isDimmed){
+            ledcWrite(tftBackLightBrightness, 20); //dims the backlight after certain time of inactivity
+            isDimmed = true;
+        }
     }
     delay(5);
 
