@@ -21,9 +21,16 @@ const char* ssid = "money2.4";
 const char* password = "money123";
 String oldWiFiName = "";
 
+
+//--------------------------- PINS ---------------------------
 //WiFi LED
 const int wifiRedLed = 32;
 const int wifiGrnLed = 26;
+
+//Backlight pin
+const int tftBackLight = 4;
+
+
 
 //Dimentions
 //const int screenWidth = 0;
@@ -42,6 +49,10 @@ Preferences prefs;
 
 //for the temp to switch between fahrenheit and cel
 bool useFahrenheit = false;
+
+
+//writeConfig
+const int tftBackLightBrightness = 0;
 
 //TFT + LVGL
 TFT_eSPI tft = TFT_eSPI();
@@ -584,9 +595,14 @@ void setup(){
 
     WiFi.begin(ssid, password);
 
-    pinMode(4, OUTPUT);
-    digitalWrite(4, HIGH);   //turn ON backlight
+    pinMode(tftBackLight, OUTPUT);
+    digitalWrite(tftBackLight, HIGH);   //turn ON backlight
     
+    
+    ledcSetup(tftBackLightBrightness, 5000, 8); //CHANGE: hard code value later channel 0, 5kHz, 8-bit resolution
+    ledcAttachPin(tftBackLight, tftBackLightBrightness);
+
+    ledcWrite(tftBackLightBrightness, 255);
     
     tft.begin();
     tft.setRotation(0);
@@ -855,15 +871,48 @@ void updateTemperature(){
     }
 }
 
+//use this later
+void save_calibration_data(uint16_t *calData){
+    prefs.putBytes("calData", calData, sizeof(uint16_t) * 5);
+    prefs.putBool("calibrated", true);
+}
+
+void sleepHandler(bool sleep){
+    if(sleep){
+
+    }
+    else{
+
+
+    }
+
+
+
+}
+
 //--------------------------- LOOP ---------------------------
 void loop(){
-    lv_timer_handler();
-    oldWiFiName = WiFi.SSID();
-    handleWiFi();
+    lcd.clear(); 
+    lcd.print(lv_disp_get_inactive_time(NULL));
 
+    lv_task_handler();
+    lv_timer_handler();
+
+    oldWiFiName = WiFi.SSID();
+
+    handleWiFi();
     updateHumidity();
     updateTemperature();
+    
+    if(lv_disp_get_inactive_time(NULL) < 100000){
+        digitalWrite(tftBackLight, HIGH);
+        ledcWrite(tftBackLightBrightness, 255);
+    }
+    else{
 
-
+        ledcWrite(tftBackLightBrightness, 20); //for 
+        
+    }
     delay(5);
+
 }
