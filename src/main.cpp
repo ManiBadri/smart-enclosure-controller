@@ -595,10 +595,6 @@ void setup(){
 
     WiFi.begin(ssid, password);
 
-    pinMode(tftBackLight, OUTPUT);
-    digitalWrite(tftBackLight, HIGH);   //turn ON backlight
-    
-    
     ledcSetup(tftBackLightBrightness, 5000, 8); //CHANGE: hard code value later channel 0, 5kHz, 8-bit resolution
     ledcAttachPin(tftBackLight, tftBackLightBrightness);
 
@@ -905,12 +901,12 @@ void loop(){
     updateTemperature();
     
     if(lv_disp_get_inactive_time(NULL) < 100000){
-        digitalWrite(tftBackLight, HIGH);
+
         ledcWrite(tftBackLightBrightness, 255);
     }
     else{
 
-        ledcWrite(tftBackLightBrightness, 20); //for 
+        ledcWrite(tftBackLightBrightness, 20); //dims the backlight after certain time of inactivity
         
     }
     delay(5);
