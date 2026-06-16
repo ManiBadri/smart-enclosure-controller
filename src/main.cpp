@@ -51,6 +51,9 @@ Preferences prefs;
 bool useFahrenheit = false;
 
 
+lv_obj_t *tempGraph;
+
+
 //writeConfig
 const int tftBackLightBrightness = 0;
 
@@ -83,6 +86,11 @@ lv_obj_t *wifi_img;
 lv_color_t wifiBoxColor = lv_color_hex(0x52525c);
 lv_color_t borderColor = lv_color_hex(0x3cb371);
 
+
+lv_chart_series_t *temp_series; //for the stats screen temp graph
+
+
+lv_coord_t tempValues[100];
 
 
 //uint32_t wifiBoxColor = 0xff0000;
@@ -413,31 +421,6 @@ void create_widget_for_slot(int i){
     }
 }
 
-//--------------------------- STAT SCREEN UI ---------------------------
-void build_stat_screen(){
-    stat_scrn = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(stat_scrn, lv_color_black(), 0);
-
-
-
-
-
-    //back button
-    lv_obj_t *back = lv_btn_create(stat_scrn);
-    lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
-    lv_obj_set_size(back, 180, 40);
-
-    lv_obj_t *lbl = lv_label_create(back);
-    lv_label_set_text(lbl, LV_SYMBOL_HOME);
-    lv_obj_center(lbl);
-
-    lv_obj_add_event_cb(back, [](lv_event_t * e){
-        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
-    }, LV_EVENT_CLICKED, NULL);
-
-
-}
-
 
 //--------------------------- MAIN SCREEN ---------------------------
 void build_main_screen(){
@@ -479,6 +462,10 @@ void build_main_screen(){
     lv_obj_t *stat_lbl = lv_label_create(btn_stat);
     lv_label_set_text(stat_lbl, "Stats");
     lv_obj_center(stat_lbl);
+
+    lv_obj_add_event_cb(btn_stat, [](lv_event_t * e){
+        lv_scr_load_anim(stat_scrn, LV_SCR_LOAD_ANIM_MOVE_LEFT, 300, 0, false);
+    }, LV_EVENT_CLICKED, NULL);
 
 
     //Settings button
@@ -600,6 +587,44 @@ void build_edit_screen(){
     }, LV_EVENT_CLICKED, NULL);
 }
 
+
+
+
+//--------------------------- STAT SCREEN UI ---------------------------
+void build_stat_screen(){
+    stat_scrn = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(stat_scrn, lv_color_black(), 0);
+
+    tempGraph = lv_chart_create(stat_scrn);
+    lv_chart_set_type(tempGraph, LV_CHART_TYPE_LINE);
+    lv_obj_set_size(tempGraph, 200, 150);
+    lv_obj_align(tempGraph, LV_ALIGN_CENTER, 0, -20);
+
+    //back button
+    lv_obj_t *back = lv_btn_create(stat_scrn);
+    lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_size(back, 180, 40);
+
+    lv_obj_t *lbl = lv_label_create(back);
+    lv_label_set_text(lbl, LV_SYMBOL_HOME);
+    lv_obj_center(lbl);
+
+    lv_scr_load(stat_scrn);
+
+    lv_obj_add_event_cb(back, [](lv_event_t * e){
+        build_main_screen();
+        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
+    }, LV_EVENT_CLICKED, NULL);
+
+
+
+    
+
+
+}
+
+
+
 //--------------------------- SETUP ---------------------------
 void setup(){
 
@@ -648,6 +673,8 @@ void setup(){
     uint16_t calData[5];
     //tft.calibrateTouch(calData, TFT_MAGENTA, TFT_BLACK, 15);
 
+    prefs.begin("calibration", false); //CHECK
+
     if(prefs.getBool("calibrated", false)){
         prefs.getBytes("calData", calData, sizeof(calData));
         tft.setTouch(calData);
@@ -656,7 +683,8 @@ void setup(){
         prefs.putBytes("calData", calData, sizeof(calData));
         prefs.putBool("calibrated", true);
     }
-    tft.setTouch(calData);
+
+    tft.setTouch(calData); 
 
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.read_cb = my_touch_read;
@@ -664,10 +692,12 @@ void setup(){
 
     main_scrn = lv_scr_act();
     settings_scrn = lv_obj_create(NULL);
+    stat_scrn = lv_obj_create(NULL);
 
 
     lv_obj_set_style_bg_color(main_scrn, lv_color_black(), 0);
     lv_obj_set_style_bg_color(settings_scrn, lv_color_black(), 0);
+    lv_obj_set_style_bg_color(stat_scrn, lv_color_black(), 0);
 
     prefs.begin("ui", false); //*
 
@@ -738,6 +768,9 @@ void setup(){
         build_edit_screen();
         lv_scr_load_anim(edit_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
+
+
+    
 
     //Back button
     home_btn = lv_btn_create(settings_scrn);
@@ -855,14 +888,21 @@ void updateHumidity(){
     }
 }
 
+float CheckTemp(){
+
+    float t = dht.readTemperature();
+
+    return t;
+}
+
 //--------------------------- Temp Update ---------------------------
-void updateTemperature(){
+void updateTemperature(float t){
     static uint32_t lastUpdate = 0;
 
     if(millis() - lastUpdate < 4000) return;
     lastUpdate = millis();
 
-    float t = dht.readTemperature();
+    //float t = dht.readTemperature();
     if(isnan(t)) return;
 
     // convert if needed
@@ -900,9 +940,38 @@ void save_calibration_data(uint16_t *calData){
     prefs.putBool("calibrated", true);
 }
 
-void chart_handler(lv_timer_t * timer){
-    //handle chart updates here if needed
 
+//maybe just for temp maybe for more
+void chart_handler(lv_timer_t * timer, float t){
+    static uint32_t lastUpdate = 0;
+    static bool placed = false;
+
+    if(millis() - lastUpdate < 4000) return;
+    lastUpdate = millis();
+
+    for(int i = 0; i < 99; i++){
+        if(tempValues[i] == 0){
+            tempValues[i] = t;
+            placed = true;
+            break;
+        }
+    }
+
+    if(!placed){
+        for(int i = 1; i < 100; i++){
+            tempValues[i-1] = tempValues[i];
+        }
+        tempValues[99] = t;
+    }
+    
+    lv_chart_set_ext_y_array(tempGraph, temp_series, tempValues);
+
+    lv_chart_refresh(tempGraph);
+
+
+
+
+    
 
 
 }
@@ -922,7 +991,7 @@ void loop(){
 
     handleWiFi();
     updateHumidity();
-    updateTemperature();
+    updateTemperature(CheckTemp());
     
     if(lv_disp_get_inactive_time(NULL) < 100000){
 
