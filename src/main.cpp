@@ -2,7 +2,6 @@
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 
-
 //if adding something that needs to be installed add it to platformio.ini
 #include <Arduino.h>
 #include <WiFi.h>
@@ -30,8 +29,6 @@ const int wifiGrnLed = 26;
 //Backlight pin
 const int tftBackLight = 4;
 
-
-
 //Dimentions
 //const int screenWidth = 0;
 //const int screenHeight = 0;
@@ -49,10 +46,6 @@ Preferences prefs;
 
 //for the temp to switch between fahrenheit and cel
 bool useFahrenheit = false;
-
-
-
-
 
 //writeConfig
 const int tftBackLightBrightness = 0;
@@ -80,17 +73,16 @@ LV_IMG_DECLARE(wifiON);
 LV_IMG_DECLARE(wifiOFF);
 lv_obj_t *wifi_img;
 
-
 //Colors
 //BUG: color not consistent with border, with lsit and item, check code?
-lv_color_t wifiBoxColor = lv_color_hex(0x52525c);
-lv_color_t borderColor = lv_color_hex(0x3cb371);
+lv_color_t wifi_box_color = lv_color_hex(0x52525c);
+lv_color_t border_color = lv_color_hex(0x3cb371);
+lv_color_t font_color= lv_color_hex(0x3cb371);
 
 lv_obj_t *tempGraph;
 lv_chart_series_t *temp_series; //for the stats screen temp graph
 
-//uint32_t wifiBoxColor = 0xff0000;
-
+//uint32_t wifi_box_color = 0xff0000;
 
 //Theme
 lv_color_t current_theme_color;
@@ -100,6 +92,8 @@ void build_wifi_screen();
 void build_edit_screen();
 void build_stat_screen();
 void build_main_screen();
+
+void build_home_button(lv_obj_t *screen);
 
 void open_wifi_password_popup(char *ssid);
 
@@ -172,7 +166,6 @@ struct WifiConnectData {
     lv_obj_t* ta;
 };
 
-
 //--------------------------- WIFI Screen UI ---------------------------
 void build_wifi_screen(){
 
@@ -189,10 +182,9 @@ void build_wifi_screen(){
     lv_obj_t *list = lv_list_create(wifi_scrn);  
     lv_obj_set_size(list, 220, 200);
     lv_obj_align(list, LV_ALIGN_TOP_MID, 0, 40);
-    //lv_obj_get_style_bg_color(list, wifiBoxColor); 
-    lv_obj_set_style_bg_color(list, wifiBoxColor, 0); //only out bar not the items
-    lv_obj_set_style_border_color(list, borderColor, 0);
-
+    //lv_obj_get_style_bg_color(list, wifi_box_color); 
+    lv_obj_set_style_bg_color(list, wifi_box_color, 0); //only out bar not the items
+    lv_obj_set_style_border_color(list, border_color, 0);
 
     //show scanning text
     lv_obj_t *loading = lv_label_create(wifi_scrn);
@@ -228,11 +220,10 @@ void build_wifi_screen(){
                 seen[seenCount++] = ssid;
 
                 lv_obj_t *btn = lv_list_add_btn(list, LV_SYMBOL_WIFI, ssid.c_str());
-                lv_obj_set_style_bg_color(btn, wifiBoxColor, 0);
-                //lv_obj_set_style_border_color(btn, wifiBoxColor,0);
-                lv_obj_set_style_arc_color(btn, wifiBoxColor,0);
+                lv_obj_set_style_bg_color(btn, wifi_box_color, 0);
+                //lv_obj_set_style_border_color(btn, wifi_box_color,0);
+                lv_obj_set_style_arc_color(btn, wifi_box_color,0);
                 
-
                 static String ssid_store[20];
                 char* ssid_copy = strdup(ssid.c_str());
 
@@ -242,30 +233,12 @@ void build_wifi_screen(){
                 }, LV_EVENT_CLICKED, ssid_copy);
             }
 
-
-            //delay(500); //testing
-
-            //click event
-
         }
     }
     
-
-    //back button
-    lv_obj_t *back = lv_btn_create(wifi_scrn);
-    lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
-    lv_obj_set_size(back, 180, 40);
-
-    lv_obj_t *lbl = lv_label_create(back);
-    lv_label_set_text(lbl, LV_SYMBOL_HOME);
-    lv_obj_center(lbl);
-
-    lv_obj_add_event_cb(back, [](lv_event_t * e){
-        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 300, 0, false);
-    }, LV_EVENT_CLICKED, NULL);
+    build_home_button(wifi_scrn);
 
 }
-
 
 
 //--------------------------- Wifi Password UI---------------------------
@@ -283,11 +256,10 @@ void open_wifi_password_popup(char *ssid){
     lv_obj_set_size(box, 200, 120);
     lv_obj_align(box, LV_ALIGN_TOP_MID, 0, 0); 
     lv_obj_clear_flag(box, LV_OBJ_FLAG_SCROLLABLE);
-    //lv_obj_get_style_bg_color(box, wifiBoxColor);
+    //lv_obj_get_style_bg_color(box, wifi_box_color);
     
     //lv_obj_align(box,0,0,0);
     
-
     //title
     lv_obj_t *label = lv_label_create(box);
     lv_label_set_text_fmt(label, "Enter Password", ssid);
@@ -419,42 +391,28 @@ void create_widget_for_slot(int i){
     }
 }
 
-
 //--------------------------- STAT SCREEN UI ---------------------------
 void build_stat_screen(){
     stat_scrn = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(stat_scrn, lv_color_black(), 0);
 
+    lv_obj_t *title = lv_label_create(stat_scrn);
+    lv_label_set_text(title, "Info");
+    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
+
     tempGraph = lv_chart_create(stat_scrn);
     lv_chart_set_type(tempGraph, LV_CHART_TYPE_LINE);
-    lv_obj_set_size(tempGraph, 200, 150);
-    lv_obj_align(tempGraph, LV_ALIGN_CENTER, 0, -20);
+    lv_obj_set_size(tempGraph, 230, 110);
+    lv_obj_align(tempGraph, LV_ALIGN_TOP_MID, 0, 50);
     lv_chart_set_point_count(tempGraph, 100);
     lv_chart_set_range(tempGraph, LV_CHART_AXIS_PRIMARY_X, 0, 100);
     lv_chart_set_range(tempGraph, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
     lv_chart_set_update_mode(tempGraph, LV_CHART_UPDATE_MODE_SHIFT);
     temp_series = lv_chart_add_series(tempGraph, lv_color_hex(0xFF0000), LV_CHART_AXIS_PRIMARY_Y);
 
-    
+    build_home_button(stat_scrn);
 
-    //back button
-    lv_obj_t *back = lv_btn_create(stat_scrn);
-    lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
-    lv_obj_set_size(back, 180, 40);
-
-    lv_obj_t *lbl = lv_label_create(back);
-    lv_label_set_text(lbl, LV_SYMBOL_HOME);
-    lv_obj_center(lbl);
-
-    lv_scr_load(stat_scrn);
-
-    lv_obj_add_event_cb(back, [](lv_event_t * e){
-        build_main_screen();
-        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
-    }, LV_EVENT_CLICKED, NULL);
 }
-
-
 
 //--------------------------- MAIN SCREEN ---------------------------
 void build_main_screen(){
@@ -474,7 +432,7 @@ void build_main_screen(){
 
     //WiFi button
     lv_obj_t *btn_wifi = lv_btn_create(main_scrn);
-    lv_obj_set_size(btn_wifi, 80, 40);
+    lv_obj_set_size(btn_wifi, 140, 40);
     lv_obj_align(btn_wifi, LV_ALIGN_BOTTOM_MID, 0, -10); //-10 instead?
     lv_obj_set_style_bg_color(btn_wifi, lv_color_hex(0x0000FF), 0);
 
@@ -608,9 +566,18 @@ void build_edit_screen(){
         lv_obj_center(label);
     }
 
+
+    build_home_button(edit_scrn);
+
+}
+
+//work on this later, maybe just pass in the screen to go back to instead of checking which one it is
+void build_home_button(lv_obj_t *screen){
+
     //Back
-    lv_obj_t *back = lv_btn_create(edit_scrn);
-    lv_obj_align(back, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
+    lv_obj_t *back = lv_btn_create(screen);
+    lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_size(back, 180, 40);
 
     lv_obj_t *lbl = lv_label_create(back);
     lv_label_set_text(lbl, LV_SYMBOL_HOME);
@@ -618,22 +585,13 @@ void build_edit_screen(){
 
     lv_obj_add_event_cb(back, [](lv_event_t * e){
         build_main_screen();
-        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_LEFT, 300, 0, false);
+        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 }
 
 
-
-
-
-
 //--------------------------- SETUP ---------------------------
 void setup(){
-
-
-
-
-
 
     //setting up debug terminal LCD ports
     Wire.begin(21,22); //SDA,SCL
@@ -777,20 +735,8 @@ void setup(){
     }, LV_EVENT_CLICKED, NULL);
 
 
-    
 
-    //Back button
-    home_btn = lv_btn_create(settings_scrn);
-    lv_obj_set_size(home_btn, 60, 30);
-    lv_obj_align(home_btn, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
-
-    lv_obj_t *home_lbl = lv_label_create(home_btn);
-    lv_label_set_text(home_lbl, LV_SYMBOL_HOME);
-    lv_obj_center(home_lbl);
-
-    lv_obj_add_event_cb(home_btn, [](lv_event_t * e){
-        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_LEFT, 300, 0, false);
-    }, LV_EVENT_CLICKED, NULL);
+    build_home_button(settings_scrn);
 
     //Temp Unit Label
     lv_obj_t *temp_label = lv_label_create(settings_scrn);
@@ -962,6 +908,8 @@ void save_calibration_data(uint16_t *calData){
 //maybe just for temp maybe for more
 void chart_handler(float t){
     static uint32_t lastUpdate = 0;
+
+    //if(!stat_scrn || lv_scr_act() != stat_scrn) return;
 
     if(millis() - lastUpdate < 4000) return;
     lastUpdate = millis();
