@@ -98,6 +98,7 @@ void build_main_screen();
 
 
 void build_home_button(lv_obj_t *screen);
+void build_scrn_title(lv_obj_t *screen, const char *title_text);
 
 void open_wifi_password_popup(char *ssid);
 
@@ -176,11 +177,14 @@ void build_wifi_screen(){
     wifi_scrn = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(wifi_scrn, lv_color_black(), 0);
 
+
+    build_scrn_title(wifi_scrn, "Available WiFi");
+
     //title
-    lv_obj_t *title = lv_label_create(wifi_scrn);
-    lv_label_set_text(title, "Available WiFi");
-    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
-    lv_obj_set_style_text_color(title, lv_color_white(), 0);
+    //lv_obj_t *title = lv_label_create(wifi_scrn);
+    //lv_label_set_text(title, "Available WiFi");
+    //lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
+    //lv_obj_set_style_text_color(title, lv_color_white(), 0);
 
     //list container (where they go in)
     lv_obj_t *list = lv_list_create(wifi_scrn);  
@@ -400,10 +404,12 @@ void build_stat_screen(){
     stat_scrn = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(stat_scrn, lv_color_black(), 0);
 
-    lv_obj_t *title = lv_label_create(stat_scrn);
-    lv_label_set_text(title, "Info");
-    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
-    lv_obj_set_style_text_color(title, font_color, 0);
+    build_scrn_title(stat_scrn, "Stats");
+
+    //lv_obj_t *title = lv_label_create(stat_scrn);
+    //lv_label_set_text(title, "Info");
+    //lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
+    //lv_obj_set_style_text_color(title, font_color, 0);
     //IMPORTANT USE LATER
     //lv_label_set_recolor
 
@@ -432,10 +438,12 @@ void build_main_screen(){
         create_widget_for_slot(i);
     }
 
-    lv_obj_t *scrn_title = lv_label_create(main_scrn);
-    lv_label_set_text(scrn_title, "Home");
-    lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 10);
-    lv_obj_set_style_text_color(scrn_title, font_color, 0);
+    build_scrn_title(main_scrn, "Home");
+
+    //lv_obj_t *scrn_title = lv_label_create(main_scrn);
+    //lv_label_set_text(scrn_title, "Home");
+    //lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 10);
+    //lv_obj_set_style_text_color(scrn_title, font_color, 0);
 
     //WiFi icon
     wifi_img = lv_img_create(main_scrn);
@@ -550,10 +558,13 @@ void build_edit_screen(){
 
     for(int i = 0; i < MAX_SLOTS; i++){
 
-        lv_obj_t *scrn_title = lv_label_create(edit_scrn);
-        lv_label_set_text(scrn_title, "Modify widgets");
-        lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 10);
-        lv_obj_set_style_text_color(scrn_title, font_color, 0);
+
+        build_scrn_title(edit_scrn, "Modify Widgets");
+
+        //lv_obj_t *scrn_title = lv_label_create(edit_scrn);
+        //lv_label_set_text(scrn_title, "Modify widgets");
+        //lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 10);
+        //lv_obj_set_style_text_color(scrn_title, font_color, 0);
 
 
         //creating the buttons
@@ -597,7 +608,7 @@ void build_edit_screen(){
 
 }
 
-//work on this later, maybe just pass in the screen to go back to instead of checking which one it is
+//home button for all screens
 void build_home_button(lv_obj_t *screen){
 
     //Back
@@ -613,6 +624,15 @@ void build_home_button(lv_obj_t *screen){
         build_main_screen();
         lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
+}
+
+//screen title builder for all screens
+void build_scrn_title(lv_obj_t *screen, const char *title_text){
+    lv_obj_t *scrn_title = lv_label_create(screen);
+    lv_label_set_text(scrn_title, title_text);
+    lv_obj_set_style_text_color(scrn_title, font_color, 0);
+    lv_obj_set_style_text_font(scrn_title, &lv_font_montserrat_10, 0);
+    lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 5);
 }
 
 
@@ -704,12 +724,13 @@ void setup(){
 
     Serial.println(esp_reset_reason());
 
+    build_scrn_title(settings_scrn, "Settings");
 
     //Title
-    lv_obj_t *title = lv_label_create(settings_scrn);
-    lv_label_set_text(title, "Settings");
-    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
-    lv_obj_set_style_text_color(title, lv_color_white(), 0);
+    //lv_obj_t *title = lv_label_create(settings_scrn);
+    //lv_label_set_text(title, "Settings");
+    //lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
+    //lv_obj_set_style_text_color(title, lv_color_white(), 0);
 
     //Theme label
     lv_obj_t *theme_label = lv_label_create(settings_scrn);
