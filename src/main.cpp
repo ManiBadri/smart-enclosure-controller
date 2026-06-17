@@ -51,7 +51,7 @@ Preferences prefs;
 bool useFahrenheit = false;
 
 
-lv_obj_t *tempGraph;
+
 
 
 //writeConfig
@@ -86,12 +86,8 @@ lv_obj_t *wifi_img;
 lv_color_t wifiBoxColor = lv_color_hex(0x52525c);
 lv_color_t borderColor = lv_color_hex(0x3cb371);
 
-
+lv_obj_t *tempGraph;
 lv_chart_series_t *temp_series; //for the stats screen temp graph
-
-
-lv_coord_t tempValues[100];
-
 
 //uint32_t wifiBoxColor = 0xff0000;
 
@@ -102,6 +98,8 @@ lv_color_t current_theme_color;
 //build screen declarations
 void build_wifi_screen();
 void build_edit_screen();
+void build_stat_screen();
+void build_main_screen();
 
 void open_wifi_password_popup(char *ssid);
 
@@ -422,6 +420,42 @@ void create_widget_for_slot(int i){
 }
 
 
+//--------------------------- STAT SCREEN UI ---------------------------
+void build_stat_screen(){
+    stat_scrn = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(stat_scrn, lv_color_black(), 0);
+
+    tempGraph = lv_chart_create(stat_scrn);
+    lv_chart_set_type(tempGraph, LV_CHART_TYPE_LINE);
+    lv_obj_set_size(tempGraph, 200, 150);
+    lv_obj_align(tempGraph, LV_ALIGN_CENTER, 0, -20);
+    lv_chart_set_point_count(tempGraph, 100);
+    lv_chart_set_range(tempGraph, LV_CHART_AXIS_PRIMARY_X, 0, 100);
+    lv_chart_set_range(tempGraph, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
+    lv_chart_set_update_mode(tempGraph, LV_CHART_UPDATE_MODE_SHIFT);
+    temp_series = lv_chart_add_series(tempGraph, lv_color_hex(0xFF0000), LV_CHART_AXIS_PRIMARY_Y);
+
+    
+
+    //back button
+    lv_obj_t *back = lv_btn_create(stat_scrn);
+    lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_size(back, 180, 40);
+
+    lv_obj_t *lbl = lv_label_create(back);
+    lv_label_set_text(lbl, LV_SYMBOL_HOME);
+    lv_obj_center(lbl);
+
+    lv_scr_load(stat_scrn);
+
+    lv_obj_add_event_cb(back, [](lv_event_t * e){
+        build_main_screen();
+        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
+    }, LV_EVENT_CLICKED, NULL);
+}
+
+
+
 //--------------------------- MAIN SCREEN ---------------------------
 void build_main_screen(){
     lv_obj_clean(main_scrn);
@@ -464,6 +498,7 @@ void build_main_screen(){
     lv_obj_center(stat_lbl);
 
     lv_obj_add_event_cb(btn_stat, [](lv_event_t * e){
+        build_stat_screen();
         lv_scr_load_anim(stat_scrn, LV_SCR_LOAD_ANIM_MOVE_LEFT, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 
@@ -590,43 +625,15 @@ void build_edit_screen(){
 
 
 
-//--------------------------- STAT SCREEN UI ---------------------------
-void build_stat_screen(){
-    stat_scrn = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(stat_scrn, lv_color_black(), 0);
-
-    tempGraph = lv_chart_create(stat_scrn);
-    lv_chart_set_type(tempGraph, LV_CHART_TYPE_LINE);
-    lv_obj_set_size(tempGraph, 200, 150);
-    lv_obj_align(tempGraph, LV_ALIGN_CENTER, 0, -20);
-
-    //back button
-    lv_obj_t *back = lv_btn_create(stat_scrn);
-    lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
-    lv_obj_set_size(back, 180, 40);
-
-    lv_obj_t *lbl = lv_label_create(back);
-    lv_label_set_text(lbl, LV_SYMBOL_HOME);
-    lv_obj_center(lbl);
-
-    lv_scr_load(stat_scrn);
-
-    lv_obj_add_event_cb(back, [](lv_event_t * e){
-        build_main_screen();
-        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
-    }, LV_EVENT_CLICKED, NULL);
-
-
-
-    
-
-
-}
-
 
 
 //--------------------------- SETUP ---------------------------
 void setup(){
+
+
+
+
+
 
     //setting up debug terminal LCD ports
     Wire.begin(21,22); //SDA,SCL
@@ -824,6 +831,7 @@ void setup(){
     lcd.print(WiFi.status());
 
 
+
     //force first draw
     lv_timer_handler();   
     delay(50);
@@ -890,6 +898,16 @@ void updateHumidity(){
 
 float CheckTemp(){
 
+    static uint32_t lastUpdate = 0;
+
+    //update every 4 seconds
+    if(millis() - lastUpdate < 3000) return NAN;
+    lastUpdate = millis();
+
+
+    float h = dht.readHumidity();
+    if(isnan(h)) return NAN;
+
     float t = dht.readTemperature();
 
     return t;
@@ -934,7 +952,7 @@ void updateTemperature(float t){
     }
 }
 
-//use this later
+//so we dont have to calibrate every time, we save the calibration data in preferences
 void save_calibration_data(uint16_t *calData){
     prefs.putBytes("calData", calData, sizeof(uint16_t) * 5);
     prefs.putBool("calibrated", true);
@@ -942,37 +960,20 @@ void save_calibration_data(uint16_t *calData){
 
 
 //maybe just for temp maybe for more
-void chart_handler(lv_timer_t * timer, float t){
+void chart_handler(float t){
     static uint32_t lastUpdate = 0;
-    static bool placed = false;
 
     if(millis() - lastUpdate < 4000) return;
     lastUpdate = millis();
 
-    for(int i = 0; i < 99; i++){
-        if(tempValues[i] == 0){
-            tempValues[i] = t;
-            placed = true;
-            break;
-        }
-    }
+    if(isnan(t) || !tempGraph || !temp_series) return;
 
-    if(!placed){
-        for(int i = 1; i < 100; i++){
-            tempValues[i-1] = tempValues[i];
-        }
-        tempValues[99] = t;
-    }
-    
-    lv_chart_set_ext_y_array(tempGraph, temp_series, tempValues);
+    lcd.clear();
+    lcd.setCursor(1, 0);
+    lcd.print(t);
 
+    lv_chart_set_next_value(tempGraph, temp_series, (lv_coord_t)t);
     lv_chart_refresh(tempGraph);
-
-
-
-
-    
-
 
 }
 
@@ -980,18 +981,23 @@ void chart_handler(lv_timer_t * timer, float t){
 void loop(){
 
     static bool isDimmed = false;
+    float currentTemp = CheckTemp();
 
     lcd.clear(); 
+    lcd.setCursor(0, 0);
     lcd.print(lv_disp_get_inactive_time(NULL));
 
-    lv_task_handler();
     lv_timer_handler();
 
     oldWiFiName = WiFi.SSID();
 
     handleWiFi();
     updateHumidity();
-    updateTemperature(CheckTemp());
+
+    if(!isnan(currentTemp)){
+        updateTemperature(currentTemp);
+        chart_handler(currentTemp);
+    }
     
     if(lv_disp_get_inactive_time(NULL) < 100000){
 
