@@ -29,6 +29,8 @@ const int wifiGrnLed = 26;
 //Backlight pin
 const int tftBackLight = 4;
 
+const int arc_height_width = 50; //for the arc widget 
+
 //Dimentions
 //const int screenWidth = 0;
 //const int screenHeight = 0;
@@ -77,7 +79,8 @@ lv_obj_t *wifi_img;
 //BUG: color not consistent with border, with lsit and item, check code?
 lv_color_t wifi_box_color = lv_color_hex(0x52525c);
 lv_color_t border_color = lv_color_hex(0x3cb371);
-lv_color_t font_color= lv_color_hex(0x3cb371);
+lv_color_t font_color= lv_color_hex(0xC9C7C7);
+lv_color_t red_color = lv_color_hex(0xFF0000);
 
 lv_obj_t *tempGraph;
 lv_chart_series_t *temp_series; //for the stats screen temp graph
@@ -92,6 +95,7 @@ void build_wifi_screen();
 void build_edit_screen();
 void build_stat_screen();
 void build_main_screen();
+
 
 void build_home_button(lv_obj_t *screen);
 
@@ -114,8 +118,8 @@ WidgetType slots[MAX_SLOTS];
 
 //Slot positions for the widgets
 lv_point_t slot_pos[MAX_SLOTS] = {
-    {50, 60}, {50, 140}, {50, 220},
-    {160, 60}, {160, 140}, {160, 220}
+    {(SCREEN_WIDTH/4), 60}, {(SCREEN_WIDTH/4), 140}, {(SCREEN_WIDTH/4), 220},
+    {(3*SCREEN_WIDTH/4), 60}, {(3*SCREEN_WIDTH/4), 140}, {(3*SCREEN_WIDTH/4), 220}
 };
 
 
@@ -333,8 +337,8 @@ void create_widget_for_slot(int i){
     switch(slots[i]){
         case WIDGET_HUMIDITY_ARC:{
             lv_obj_t *arc = lv_arc_create(main_scrn);
-            lv_obj_set_size(arc, 50, 50);
-            lv_obj_set_pos(arc, slot_pos[i].x - 25, slot_pos[i].y - 25);
+            lv_obj_set_size(arc, arc_height_width, arc_height_width);
+            lv_obj_set_pos(arc, slot_pos[i].x - arc_height_width/2, slot_pos[i].y - arc_height_width/2);
                 
             lv_arc_set_range(arc, 0, 100);
             lv_arc_set_value(arc, 50);
@@ -399,6 +403,9 @@ void build_stat_screen(){
     lv_obj_t *title = lv_label_create(stat_scrn);
     lv_label_set_text(title, "Info");
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_set_style_text_color(title, font_color, 0);
+    //IMPORTANT USE LATER
+    //lv_label_set_recolor
 
     tempGraph = lv_chart_create(stat_scrn);
     lv_chart_set_type(tempGraph, LV_CHART_TYPE_LINE);
@@ -424,6 +431,11 @@ void build_main_screen(){
     for(int i = 0; i < MAX_SLOTS; i++){
         create_widget_for_slot(i);
     }
+
+    lv_obj_t *scrn_title = lv_label_create(main_scrn);
+    lv_label_set_text(scrn_title, "Home");
+    lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_set_style_text_color(scrn_title, font_color, 0);
 
     //WiFi icon
     wifi_img = lv_img_create(main_scrn);
@@ -538,6 +550,12 @@ void build_edit_screen(){
 
     for(int i = 0; i < MAX_SLOTS; i++){
 
+        lv_obj_t *scrn_title = lv_label_create(edit_scrn);
+        lv_label_set_text(scrn_title, "Modify widgets");
+        lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 10);
+        lv_obj_set_style_text_color(scrn_title, font_color, 0);
+
+
         //creating the buttons
         lv_obj_t *btn = lv_btn_create(edit_scrn);
         lv_obj_set_size(btn, 60, 60);
@@ -549,10 +567,15 @@ void build_edit_screen(){
         lv_obj_set_style_border_width(btn, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_t *label = lv_label_create(btn);
+        //lv_obj_set_style_text_font(label, &lv_font_montserrat_20, 0);
         //checking if theres a widget or not
         if(slots[i] == WIDGET_NONE){
             //add widget labe
             lv_label_set_text(label, "+");
+            
+            lv_obj_align(label, LV_ALIGN_CENTER, 20, 20);
+            lv_obj_set_style_text_color(label, font_color, 0);
+            lv_obj_set_style_text_font(label, &lv_font_montserrat_20, 0);
             lv_obj_add_event_cb(btn, [](lv_event_t * e){
                 int index = (int)lv_event_get_user_data(e);
                 open_add_menu(index);
@@ -560,6 +583,9 @@ void build_edit_screen(){
         } else {
             //remove widget label
             lv_label_set_text(label, "X");
+            lv_obj_align(label, LV_ALIGN_CENTER, 20, 20);
+            lv_obj_set_style_text_font(label, &lv_font_montserrat_12, 0);
+            lv_obj_set_style_text_color(label, red_color, 0);
             lv_obj_add_event_cb(btn, slot_click_event, LV_EVENT_CLICKED, (void*)i);
         }
 
@@ -894,6 +920,7 @@ void updateTemperature(float t){
 
         if(slots[i] == WIDGET_TEMP_TEXT && slot_label[i]){
             lv_label_set_text(slot_label[i], buf);
+            lv_obj_set_style_text_color(slot_label[i], font_color, 0);
         }
     }
 }
