@@ -16,9 +16,10 @@
 #define MAX_SLOTS 6
 
 //WiFi
-const char* ssid = "money2.4";
-const char* password = "money123";
 String oldWiFiName = "";
+
+String wifi_ssid = "";
+String wifi_password = "";
 
 
 //--------------------------- PINS ---------------------------
@@ -45,6 +46,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 //Preferences
 Preferences prefs;
+Preferences wifiPrefs;
 
 //for the temp to switch between fahrenheit and cel
 bool useFahrenheit = false;
@@ -162,11 +164,24 @@ void save_slots(){
 }
 
 
-
 struct WifiConnectData {
     char* ssid;
     lv_obj_t* ta;
 };
+
+void load_wifi_credentials(){
+    wifiPrefs.begin("wifi", false);
+    wifi_ssid = wifiPrefs.getString("ssid", wifi_ssid);
+    wifi_password = wifiPrefs.getString("password", wifi_password);
+    wifiPrefs.end();
+}
+
+void save_wifi_credentials(){
+    wifiPrefs.begin("wifi", false);
+    wifiPrefs.putString("ssid", wifi_ssid);
+    wifiPrefs.putString("password", wifi_password);
+    wifiPrefs.end();
+}
 
 //--------------------------- WIFI Screen UI ---------------------------
 void build_wifi_screen(){
@@ -177,11 +192,6 @@ void build_wifi_screen(){
 
     build_scrn_title(wifi_scrn, "Available WiFi");
 
-    //title
-    //lv_obj_t *title = lv_label_create(wifi_scrn);
-    //lv_label_set_text(title, "Available WiFi");
-    //lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
-    //lv_obj_set_style_text_color(title, lv_color_white(), 0);
 
     //list container (where they go in)
     lv_obj_t *list = lv_list_create(wifi_scrn);  
@@ -267,7 +277,7 @@ void open_wifi_password_popup(char *ssid){
     
     //title
     lv_obj_t *label = lv_label_create(box);
-    lv_label_set_text_fmt(label, "Enter Password", ssid);
+    lv_label_set_text_fmt(label, "Enter Password: %s", ssid);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 5);
     
 
@@ -306,16 +316,18 @@ void open_wifi_password_popup(char *ssid){
 
         WifiConnectData* data = (WifiConnectData*)lv_event_get_user_data(e);
 
-        const char *password = lv_textarea_get_text(data->ta);
+        wifi_ssid = data->ssid;
+        wifi_password = lv_textarea_get_text(data->ta);
+        save_wifi_credentials();
 
         //Serial.print("Connecting to: ");
         //Serial.println(data->ssid);
 
-        //BUG: not working
-        WiFi.begin("Here", password); //was data->ssid
+        WiFi.mode(WIFI_STA);
+        WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
         
         lcd.clear();
-        lcd.print(password);
+        lcd.print(wifi_password);
 
         free(data->ssid);
         delete data;
@@ -326,12 +338,6 @@ void open_wifi_password_popup(char *ssid){
     }, LV_EVENT_CLICKED, data);
 }
 
-
-//--------------------------- Check if wifi password is right ---------------------------
-void wifi_password_check(){
-    WiFi.begin(ssid, password);
-
-}
 
 //--------------------------- Widget Creation ---------------------------
 void create_widget_for_slot(int i){
@@ -404,13 +410,6 @@ void build_stat_screen(){
 
     build_scrn_title(stat_scrn, "Stats");
 
-    //lv_obj_t *title = lv_label_create(stat_scrn);
-    //lv_label_set_text(title, "Info");
-    //lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
-    //lv_obj_set_style_text_color(title, font_color, 0);
-    //IMPORTANT USE LATER
-    //lv_label_set_recolor
-
     tempGraph = lv_chart_create(stat_scrn);
     lv_chart_set_type(tempGraph, LV_CHART_TYPE_LINE);
     lv_obj_set_size(tempGraph, 230, 110);
@@ -419,7 +418,7 @@ void build_stat_screen(){
     lv_chart_set_range(tempGraph, LV_CHART_AXIS_PRIMARY_X, 0, 100);
     lv_chart_set_range(tempGraph, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
     lv_chart_set_update_mode(tempGraph, LV_CHART_UPDATE_MODE_SHIFT);
-    temp_series = lv_chart_add_series(tempGraph, lv_color_hex(0xFF0000), LV_CHART_AXIS_PRIMARY_Y);
+    temp_series = lv_chart_add_series(tempGraph, btn_color, LV_CHART_AXIS_PRIMARY_Y);
 
     build_home_button(stat_scrn);
 
@@ -740,8 +739,14 @@ void setup(){
     pinMode(wifiRedLed, OUTPUT);
     pinMode(wifiGrnLed, OUTPUT);
 
+    load_wifi_credentials();
 
-    WiFi.begin(ssid, password);
+    if(wifi_ssid.length() > 0 && wifi_password.length() > 0){
+        WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
+    } else {
+        WiFi.disconnect(true);
+        WiFi.mode(WIFI_OFF);
+    }
 
     ledcSetup(tftBackLightBrightness, 5000, 8); //CHANGE: hard code value later channel 0, 5kHz, 8-bit resolution
     ledcAttachPin(tftBackLight, tftBackLightBrightness);
