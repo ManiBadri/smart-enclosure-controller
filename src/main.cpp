@@ -86,6 +86,7 @@ lv_color_t btn_color = lv_color_hex(0x212496);
 
 lv_obj_t *tempGraph;
 lv_chart_series_t *temp_series; //for the stats screen temp graph
+bool stat_screen_initialized = false;
 
 //uint32_t wifi_box_color = 0xff0000;
 
@@ -397,7 +398,8 @@ void create_widget_for_slot(int i){
 
 //--------------------------- STAT SCREEN UI ---------------------------
 void build_stat_screen(){
-    stat_scrn = lv_obj_create(NULL);
+    if(stat_screen_initialized) return;
+
     lv_obj_set_style_bg_color(stat_scrn, lv_color_black(), 0);
 
     build_scrn_title(stat_scrn, "Stats");
@@ -420,6 +422,8 @@ void build_stat_screen(){
     temp_series = lv_chart_add_series(tempGraph, lv_color_hex(0xFF0000), LV_CHART_AXIS_PRIMARY_Y);
 
     build_home_button(stat_scrn);
+
+    stat_screen_initialized = true;
 
 }
 
@@ -801,17 +805,12 @@ void setup(){
 
     useFahrenheit = prefs.getBool("useF", false);
 
+    build_stat_screen();
+
     //SETTINGS SCREEN BUTTON
 
     Serial.println(esp_reset_reason());
 
-    //build_scrn_title(settings_scrn, "Settings");
-
-    //Title
-    //lv_obj_t *title = lv_label_create(settings_scrn);
-    //lv_label_set_text(title, "Settings");
-    //lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
-    //lv_obj_set_style_text_color(title, lv_color_white(), 0);
 
     
 
