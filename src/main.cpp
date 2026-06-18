@@ -95,6 +95,7 @@ void build_wifi_screen();
 void build_edit_screen();
 void build_stat_screen();
 void build_main_screen();
+void build_settings_screen();
 
 
 void build_home_button(lv_obj_t *screen);
@@ -491,6 +492,7 @@ void build_main_screen(){
     lv_obj_center(lbl);
 
     lv_obj_add_event_cb(stnBtn, [](lv_event_t * e){
+        build_settings_screen();
         lv_scr_load_anim(settings_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 
@@ -547,6 +549,64 @@ void open_add_menu(int slot_index){
 
         }, LV_EVENT_CLICKED, (void*)packed);
     }
+}
+
+
+//--------------------------- Setting Screen ---------------------------
+void build_settings_screen(){
+    settings_scrn = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(settings_scrn, lv_color_black(), 0);
+
+    build_scrn_title(settings_scrn, "Settings");
+
+    
+    //Edit Layout button (below theme)
+    lv_obj_t *editBtn = lv_btn_create(settings_scrn);
+    lv_obj_set_size(editBtn, 140, 40);
+    lv_obj_align(editBtn, LV_ALIGN_TOP_MID, 0, 110);
+
+    lv_obj_t *lbl = lv_label_create(editBtn);
+    lv_label_set_text(lbl, "Edit Layout");
+    lv_obj_center(lbl);
+
+    lv_obj_add_event_cb(editBtn, [](lv_event_t * e){
+        build_edit_screen();
+        lv_scr_load_anim(edit_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
+    }, LV_EVENT_CLICKED, NULL);
+
+
+
+    build_home_button(settings_scrn);
+
+    //Temp Unit Label
+    lv_obj_t *temp_label = lv_label_create(settings_scrn);
+    lv_label_set_text(temp_label, "Fahrenheit");
+    lv_obj_align(temp_label, LV_ALIGN_TOP_LEFT, 10, 170);
+    lv_obj_set_style_text_color(temp_label, lv_color_white(), 0);
+
+    //switch for temp
+    lv_obj_t *temp_switch = lv_switch_create(settings_scrn);
+    lv_obj_align(temp_switch, LV_ALIGN_TOP_RIGHT, -20, 165);
+    lv_obj_set_style_bg_color(temp_switch, lv_color_hex(0x0000FF), LV_PART_INDICATOR | LV_STATE_CHECKED);
+
+    //set initial state
+    if(useFahrenheit){
+        lv_obj_add_state(temp_switch, LV_STATE_CHECKED);
+    }
+
+    lv_scr_load(settings_scrn);
+
+    //temp switch event
+    lv_obj_add_event_cb(temp_switch, [](lv_event_t * e){
+        lv_obj_t *sw = lv_event_get_target(e);
+
+        useFahrenheit = lv_obj_has_state(sw, LV_STATE_CHECKED);
+
+        prefs.putBool("useF", useFahrenheit);
+
+    }, LV_EVENT_VALUE_CHANGED, NULL);
+
+
 }
 
 //--------------------------- Edit Screen UI ---------------------------
@@ -626,6 +686,8 @@ void build_home_button(lv_obj_t *screen){
     }, LV_EVENT_CLICKED, NULL);
 }
 
+
+//--------------------------- Title Builder ---------------------------
 //screen title builder for all screens
 void build_scrn_title(lv_obj_t *screen, const char *title_text){
     lv_obj_t *scrn_title = lv_label_create(screen);
@@ -633,6 +695,7 @@ void build_scrn_title(lv_obj_t *screen, const char *title_text){
     lv_obj_set_style_text_color(scrn_title, font_color, 0);
     lv_obj_set_style_text_font(scrn_title, &lv_font_montserrat_10, 0);
     lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 5);
+    lv_obj_set_style_bg_color(scrn_title, wifi_box_color, 0);
 }
 
 
@@ -724,7 +787,7 @@ void setup(){
 
     Serial.println(esp_reset_reason());
 
-    build_scrn_title(settings_scrn, "Settings");
+    //build_scrn_title(settings_scrn, "Settings");
 
     //Title
     //lv_obj_t *title = lv_label_create(settings_scrn);
@@ -732,85 +795,7 @@ void setup(){
     //lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
     //lv_obj_set_style_text_color(title, lv_color_white(), 0);
 
-    //Theme label
-    lv_obj_t *theme_label = lv_label_create(settings_scrn);
-    lv_label_set_text(theme_label, "Theme:");
-    lv_obj_align(theme_label, LV_ALIGN_TOP_LEFT, 10, 50);
-    lv_obj_set_style_text_color(theme_label, lv_color_white(), 0);
-
-    //Theme buttons
-    lv_obj_t *btn_red = lv_btn_create(settings_scrn);
-    lv_obj_set_size(btn_red, 30, 30);
-    lv_obj_align(btn_red, LV_ALIGN_TOP_LEFT, 80, 45);
-    lv_obj_set_style_bg_color(btn_red, lv_color_hex(0xFF0000), 0);
-
-    lv_obj_t *btn_green = lv_btn_create(settings_scrn);
-    lv_obj_set_size(btn_green, 30, 30);
-    lv_obj_align(btn_green, LV_ALIGN_TOP_LEFT, 120, 45);
-    lv_obj_set_style_bg_color(btn_green, lv_color_hex(0x00FF00), 0);
-
-    lv_obj_t *btn_blue = lv_btn_create(settings_scrn);
-    lv_obj_set_size(btn_blue, 30, 30);
-    lv_obj_align(btn_blue, LV_ALIGN_TOP_LEFT, 160, 45);
-    lv_obj_set_style_bg_color(btn_blue, lv_color_hex(0x0000FF), 0);  //my blue
-
-    //Theme click handler
-    auto theme_event = [](lv_event_t * e){
-        lv_obj_t *btn = lv_event_get_target(e);
-        lv_color_t color = lv_obj_get_style_bg_color(btn, 0);
-
-        apply_theme_color(color);
-        prefs.putUInt("btn_color", lv_color_to32(color));
-    };
-
-    lv_obj_add_event_cb(btn_red, theme_event, LV_EVENT_CLICKED, NULL);
-    lv_obj_add_event_cb(btn_green, theme_event, LV_EVENT_CLICKED, NULL);
-    lv_obj_add_event_cb(btn_blue, theme_event, LV_EVENT_CLICKED, NULL);
-
-    //Edit Layout button (below theme)
-    lv_obj_t *editBtn = lv_btn_create(settings_scrn);
-    lv_obj_set_size(editBtn, 140, 40);
-    lv_obj_align(editBtn, LV_ALIGN_TOP_MID, 0, 110);
-
-    lv_obj_t *lbl = lv_label_create(editBtn);
-    lv_label_set_text(lbl, "Edit Layout");
-    lv_obj_center(lbl);
-
-    lv_obj_add_event_cb(editBtn, [](lv_event_t * e){
-        build_edit_screen();
-        lv_scr_load_anim(edit_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
-    }, LV_EVENT_CLICKED, NULL);
-
-
-
-    build_home_button(settings_scrn);
-
-    //Temp Unit Label
-    lv_obj_t *temp_label = lv_label_create(settings_scrn);
-    lv_label_set_text(temp_label, "Fahrenheit");
-    lv_obj_align(temp_label, LV_ALIGN_TOP_LEFT, 10, 170);
-    lv_obj_set_style_text_color(temp_label, lv_color_white(), 0);
-
-    //switch for temp
-    lv_obj_t *temp_switch = lv_switch_create(settings_scrn);
-    lv_obj_align(temp_switch, LV_ALIGN_TOP_RIGHT, -20, 165);
-    lv_obj_set_style_bg_color(temp_switch, lv_color_hex(0x0000FF), LV_PART_INDICATOR | LV_STATE_CHECKED);
-
-
-    //set initial state
-    if(useFahrenheit){
-        lv_obj_add_state(temp_switch, LV_STATE_CHECKED);
-    }
-
-    //temp switch event
-    lv_obj_add_event_cb(temp_switch, [](lv_event_t * e){
-        lv_obj_t *sw = lv_event_get_target(e);
-
-        useFahrenheit = lv_obj_has_state(sw, LV_STATE_CHECKED);
-
-        prefs.putBool("useF", useFahrenheit);
-
-    }, LV_EVENT_VALUE_CHANGED, NULL);
+    
 
     build_main_screen();
     lv_scr_load(main_scrn);
