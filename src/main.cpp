@@ -81,6 +81,8 @@ lv_color_t wifi_box_color = lv_color_hex(0x52525c);
 lv_color_t border_color = lv_color_hex(0x3cb371);
 lv_color_t font_color= lv_color_hex(0xC9C7C7);
 lv_color_t red_color = lv_color_hex(0xFF0000);
+lv_color_t btn_color = lv_color_hex(0x212496);
+
 
 lv_obj_t *tempGraph;
 lv_chart_series_t *temp_series; //for the stats screen temp graph
@@ -158,14 +160,7 @@ void save_slots(){
     }
 }
 
-//--------------------------- THEME ---------------------------
-void apply_theme_color(lv_color_t color){
-    current_theme_color = color;
 
-    if(stnBtn) lv_obj_set_style_bg_color(stnBtn, color, 0);
-    if(statBtn) lv_obj_set_style_bg_color(statBtn, color, 0);
-    if(home_btn) lv_obj_set_style_bg_color(home_btn, color, 0);
-}
 
 struct WifiConnectData {
     char* ssid;
@@ -456,7 +451,7 @@ void build_main_screen(){
     lv_obj_t *btn_wifi = lv_btn_create(main_scrn);
     lv_obj_set_size(btn_wifi, 140, 40);
     lv_obj_align(btn_wifi, LV_ALIGN_BOTTOM_MID, 0, -10); //-10 instead?
-    lv_obj_set_style_bg_color(btn_wifi, lv_color_hex(0x0000FF), 0);
+    lv_obj_set_style_bg_color(btn_wifi, btn_color, 0);
 
     lv_obj_t *lbl_wifi = lv_label_create(btn_wifi);
     lv_label_set_text(lbl_wifi, LV_SYMBOL_WIFI);
@@ -471,7 +466,7 @@ void build_main_screen(){
     lv_obj_t *btn_stat = lv_btn_create(main_scrn);
     lv_obj_set_size(btn_stat, 40, 40);
     lv_obj_align(btn_stat, LV_ALIGN_BOTTOM_RIGHT, 0, -10);
-    lv_obj_set_style_bg_color(btn_stat, lv_color_hex(0x0000FF), 0);
+    lv_obj_set_style_bg_color(btn_stat, btn_color, 0);
 
     lv_obj_t *stat_lbl = lv_label_create(btn_stat);
     lv_label_set_text(stat_lbl, "Stats");
@@ -487,6 +482,7 @@ void build_main_screen(){
     stnBtn = lv_btn_create(main_scrn);
     lv_obj_set_size(stnBtn, 40, 40);
     lv_obj_align(stnBtn, LV_ALIGN_BOTTOM_LEFT, 0, -10);
+    lv_obj_set_style_bg_color(stnBtn, btn_color, 0);
 
     lv_obj_t *lbl = lv_label_create(stnBtn);
     lv_label_set_text(lbl, LV_SYMBOL_SETTINGS);
@@ -497,7 +493,6 @@ void build_main_screen(){
         lv_scr_load_anim(settings_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 
-    apply_theme_color(current_theme_color);
 }
 
 //--------------------------- Event For Clicking Slots ---------------------------
@@ -528,6 +523,7 @@ void open_add_menu(int slot_index){
     for(int j = 0; j < 4; j++){
         lv_obj_t *btn = lv_btn_create(menu);
         lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, 10 + j * 45);
+        lv_obj_set_style_bg_color(btn, btn_color, 0);
 
         lv_obj_t *lbl = lv_label_create(btn);
         lv_label_set_text(lbl, names[j]);
@@ -565,9 +561,11 @@ void build_settings_screen(){
     lv_obj_t *editBtn = lv_btn_create(settings_scrn);
     lv_obj_set_size(editBtn, 140, 40);
     lv_obj_align(editBtn, LV_ALIGN_TOP_MID, 0, 110);
+    lv_obj_set_style_bg_color(editBtn, btn_color, 0);
 
     lv_obj_t *lbl = lv_label_create(editBtn);
     lv_label_set_text(lbl, "Edit Layout");
+    lv_obj_set_style_text_color(lbl, font_color, 0);
     lv_obj_center(lbl);
 
     lv_obj_add_event_cb(editBtn, [](lv_event_t * e){
@@ -583,12 +581,12 @@ void build_settings_screen(){
     lv_obj_t *temp_label = lv_label_create(settings_scrn);
     lv_label_set_text(temp_label, "Fahrenheit");
     lv_obj_align(temp_label, LV_ALIGN_TOP_LEFT, 10, 170);
-    lv_obj_set_style_text_color(temp_label, lv_color_white(), 0);
+    lv_obj_set_style_text_color(temp_label, font_color, 0);
 
     //switch for temp
     lv_obj_t *temp_switch = lv_switch_create(settings_scrn);
     lv_obj_align(temp_switch, LV_ALIGN_TOP_RIGHT, -20, 165);
-    lv_obj_set_style_bg_color(temp_switch, lv_color_hex(0x0000FF), LV_PART_INDICATOR | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(temp_switch, btn_color, LV_PART_INDICATOR | LV_STATE_CHECKED);
 
     //set initial state
     if(useFahrenheit){
@@ -632,6 +630,7 @@ void build_edit_screen(){
         lv_obj_t *btn = lv_btn_create(edit_scrn);
         lv_obj_set_size(btn, 60, 60);
         lv_obj_set_pos(btn, slot_pos[i].x - 30, slot_pos[i].y - 30);
+        
 
         //colors and border looks bad but 
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x000000),LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -676,6 +675,7 @@ void build_home_button(lv_obj_t *screen){
     lv_obj_t *back = lv_btn_create(screen);
     lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
     lv_obj_set_size(back, 180, 40);
+    lv_obj_set_style_bg_color(back, btn_color, 0);
 
     lv_obj_t *lbl = lv_label_create(back);
     lv_label_set_text(lbl, LV_SYMBOL_HOME);
@@ -693,6 +693,7 @@ void build_home_button(lv_obj_t *screen){
 void build_scrn_title(lv_obj_t *screen, const char *title_text){
 
     lv_color_t title_bg_color = lv_color_hex(0x2E2E2E);
+    title_bg_color = btn_color; //use theme color for title background
     lv_coord_t title_radius = 6;
 
     lv_obj_t *title_rect = lv_obj_create(screen);
