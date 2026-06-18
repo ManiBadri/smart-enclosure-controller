@@ -451,6 +451,7 @@ void build_main_screen(){
     lv_obj_align(wifi_img, LV_ALIGN_TOP_RIGHT, -5, 5);
     lv_img_set_src(wifi_img, &wifiOFF);
 
+
     //WiFi button
     lv_obj_t *btn_wifi = lv_btn_create(main_scrn);
     lv_obj_set_size(btn_wifi, 140, 40);
@@ -690,12 +691,28 @@ void build_home_button(lv_obj_t *screen){
 //--------------------------- Title Builder ---------------------------
 //screen title builder for all screens
 void build_scrn_title(lv_obj_t *screen, const char *title_text){
+
+    lv_color_t title_bg_color = lv_color_hex(0x2E2E2E);
+    lv_coord_t title_radius = 6;
+
+    lv_obj_t *title_rect = lv_obj_create(screen);
+    lv_obj_set_size(title_rect, SCREEN_WIDTH - 80, 25);
+    lv_obj_align(title_rect, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_set_style_bg_color(title_rect, title_bg_color, 0);
+    lv_obj_set_style_bg_opa(title_rect, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(title_rect, 0, 0);
+    lv_obj_set_style_radius(title_rect, title_radius, 0);
+    lv_obj_set_style_clip_corner(title_rect, true, 0);
+    lv_obj_clear_flag(title_rect, LV_OBJ_FLAG_SCROLLABLE);
+
+
     lv_obj_t *scrn_title = lv_label_create(screen);
     lv_label_set_text(scrn_title, title_text);
     lv_obj_set_style_text_color(scrn_title, font_color, 0);
-    lv_obj_set_style_text_font(scrn_title, &lv_font_montserrat_10, 0);
+    lv_obj_set_style_text_font(scrn_title, &lv_font_montserrat_14, 0);
     lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 5);
-    lv_obj_set_style_bg_color(scrn_title, wifi_box_color, 0);
+
+    
 }
 
 
