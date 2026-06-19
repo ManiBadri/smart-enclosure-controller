@@ -108,7 +108,10 @@ void build_home_button(lv_obj_t *screen);
 void build_scrn_title(lv_obj_t *screen, const char *title_text);
 void remove_shadow(lv_obj_t *obj);
 
-
+void pre_add_menu(int index);
+void pre_add_menu_btns(lv_obj_t *menu, const char *name, int j, int destination, int slot);
+void open_add_menu_humidity(int slot_index);
+void open_add_menu_temp(int slot_index);
 
 void open_wifi_password_popup(char *ssid);
 
@@ -171,6 +174,16 @@ void save_slots(){
 struct WifiConnectData {
     char* ssid;
     lv_obj_t* ta;
+};
+
+struct AddMenuRouteData {
+    int slot;
+    int destination;
+};
+
+struct AddMenuChoiceData {
+    int slot;
+    WidgetType widgetType;
 };
 
 void load_wifi_credentials(){
@@ -516,8 +529,35 @@ void slot_click_event(lv_event_t * e){
     }
 }
 
-//--------------------------- Add and Delete Widget Screen ---------------------------
-void open_add_menu(int slot_index){
+static void open_add_menu_route_cb(lv_event_t * e){
+    AddMenuRouteData* data = (AddMenuRouteData*)lv_event_get_user_data(e);
+
+    if(data == nullptr) return;
+
+    int slot = data->slot;
+    int destination = data->destination;
+    delete data;
+
+    if(destination == 0){
+        open_add_menu_humidity(slot);
+    } else if(destination == 1){
+        open_add_menu_temp(slot);
+    }
+}
+
+static void add_widget_choice_cb(lv_event_t * e){
+    AddMenuChoiceData* data = (AddMenuChoiceData*)lv_event_get_user_data(e);
+
+    if(data == nullptr) return;
+
+    slots[data->slot] = data->widgetType;
+    save_slots();
+    delete data;
+    build_edit_screen();
+}
+
+
+void pre_add_menu(int slot_index){
 
     //add selector pop up menu
     lv_obj_t *menu = lv_obj_create(edit_scrn);
@@ -526,9 +566,46 @@ void open_add_menu(int slot_index){
     lv_obj_set_style_bg_color(menu, lv_color_hex(0x383838),LV_PART_MAIN | LV_STATE_DEFAULT); //bg color of pop up menu
     lv_obj_set_style_border_color(menu, lv_color_hex(0xFFFFFF),LV_PART_MAIN | LV_STATE_DEFAULT); //border color
 
-    const char *names[] = {"Hum Arc", "Hum Text", "Temp Bar", "Temp Text"};
+    const char *names[] = {"Humidity", "Temperature"};
 
-    for(int j = 0; j < 4; j++){
+    pre_add_menu_btns(menu, names[0], 0, 0, slot_index);
+    pre_add_menu_btns(menu, names[1], 1, 1, slot_index);
+
+        
+
+}
+
+void pre_add_menu_btns(lv_obj_t *menu, const char *name, int j, int destination, int slot){
+
+    lv_obj_t *btn = lv_btn_create(menu);
+    lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, 10 + j * 45);
+    lv_obj_set_style_bg_color(btn, btn_color, 0);
+    remove_shadow(btn);
+
+    lv_obj_t *lbl = lv_label_create(btn);
+    lv_label_set_text(lbl, name);
+    lv_obj_center(lbl);
+
+    AddMenuRouteData* data = new AddMenuRouteData{slot, destination};
+    lv_obj_add_event_cb(btn, open_add_menu_route_cb, LV_EVENT_CLICKED, data);
+
+
+}
+
+
+void open_add_menu_humidity(int slot_index){
+
+    //add selector pop up menu
+    lv_obj_t *menu = lv_obj_create(edit_scrn);
+    lv_obj_set_size(menu, 200, 220);
+    lv_obj_center(menu);
+    lv_obj_set_style_bg_color(menu, lv_color_hex(0x383838),LV_PART_MAIN | LV_STATE_DEFAULT); //bg color of pop up menu
+    lv_obj_set_style_border_color(menu, lv_color_hex(0xFFFFFF),LV_PART_MAIN | LV_STATE_DEFAULT); //border color
+
+    const char *names[] = {"Hum Arc", "Hum Text"};
+    const WidgetType widgetTypes[] = {WIDGET_HUMIDITY_ARC, WIDGET_HUMIDITY_TEXT};
+
+    for(int j = 0; j < 2; j++){
         lv_obj_t *btn = lv_btn_create(menu);
         lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, 10 + j * 45);
         lv_obj_set_style_bg_color(btn, btn_color, 0);
@@ -538,22 +615,35 @@ void open_add_menu(int slot_index){
         lv_label_set_text(lbl, names[j]);
         lv_obj_center(lbl);
 
-        //PACK slot + type into one int
-        int packed = (slot_index << 8) | j;
+        AddMenuChoiceData* data = new AddMenuChoiceData{slot_index, widgetTypes[j]};
+        lv_obj_add_event_cb(btn, add_widget_choice_cb, LV_EVENT_CLICKED, data);
+    }
+}
 
-        lv_obj_add_event_cb(btn, [](lv_event_t * e){
+void open_add_menu_temp(int slot_index){
 
-            int packed = (int)lv_event_get_user_data(e);
+    //add selector pop up menu
+    lv_obj_t *menu = lv_obj_create(edit_scrn);
+    lv_obj_set_size(menu, 200, 220);
+    lv_obj_center(menu);
+    lv_obj_set_style_bg_color(menu, lv_color_hex(0x383838),LV_PART_MAIN | LV_STATE_DEFAULT); //bg color of pop up menu
+    lv_obj_set_style_border_color(menu, lv_color_hex(0xFFFFFF),LV_PART_MAIN | LV_STATE_DEFAULT); //border color
 
-            int slot = packed >> 8;
-            int type = packed & 0xFF;
+    const char *names[] = {"Temp Bar", "Temp Text"};
+    const WidgetType widgetTypes[] = {WIDGET_TEMP_BAR, WIDGET_TEMP_TEXT};
 
-            slots[slot] = (WidgetType)(type + 1);
+    for(int j = 0; j < 2; j++){
+        lv_obj_t *btn = lv_btn_create(menu);
+        lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, 10 + j * 45);
+        lv_obj_set_style_bg_color(btn, btn_color, 0);
+        remove_shadow(btn);
 
-            save_slots();
-            build_edit_screen();
+        lv_obj_t *lbl = lv_label_create(btn);
+        lv_label_set_text(lbl, names[j]);
+        lv_obj_center(lbl);
 
-        }, LV_EVENT_CLICKED, (void*)packed);
+        AddMenuChoiceData* data = new AddMenuChoiceData{slot_index, widgetTypes[j]};
+        lv_obj_add_event_cb(btn, add_widget_choice_cb, LV_EVENT_CLICKED, data);
     }
 }
 
@@ -657,7 +747,8 @@ void build_edit_screen(){
             lv_obj_set_style_text_font(label, &lv_font_montserrat_20, 0);
             lv_obj_add_event_cb(btn, [](lv_event_t * e){
                 int index = (int)lv_event_get_user_data(e);
-                open_add_menu(index);
+                //open_add_menu(index);
+                pre_add_menu(index); //TEST
             }, LV_EVENT_CLICKED, (void*)i);
         } else {
             //remove widget label
@@ -684,8 +775,6 @@ void remove_shadow(lv_obj_t *obj) {
     lv_obj_set_style_shadow_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_shadow_opa(obj, LV_OPA_TRANSP, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
-
-
 
 
 //home button for all screens
