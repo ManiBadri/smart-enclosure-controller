@@ -66,6 +66,7 @@ lv_obj_t *edit_scrn;
 lv_obj_t *wifi_scrn;
 lv_obj_t *stat_scrn;
 
+
 //Buttons (global for theme)
 //need better way later to add buttons
 lv_obj_t *stnBtn;
@@ -86,7 +87,7 @@ lv_color_t red_color = lv_color_hex(0xFF0000);
 lv_color_t btn_color = lv_color_hex(0x212496);
 
 
-lv_obj_t *tempGraph;
+lv_obj_t *temp_graph;
 lv_chart_series_t *temp_series; //for the stats screen temp graph
 bool stat_screen_initialized = false;
 
@@ -105,6 +106,9 @@ void build_settings_screen();
 
 void build_home_button(lv_obj_t *screen);
 void build_scrn_title(lv_obj_t *screen, const char *title_text);
+void remove_shadow(lv_obj_t *obj);
+
+
 
 void open_wifi_password_popup(char *ssid);
 
@@ -305,6 +309,7 @@ void open_wifi_password_popup(char *ssid){
     lv_obj_t *btn = lv_btn_create(box);
     lv_obj_set_size(btn, 80, 20);
     lv_obj_align(btn, LV_ALIGN_BOTTOM_MID, 0, 0);
+    remove_shadow(btn);
 
     lv_obj_t *btn_lbl = lv_label_create(btn);
     lv_label_set_text(btn_lbl, "Connect");
@@ -410,15 +415,18 @@ void build_stat_screen(){
 
     build_scrn_title(stat_scrn, "Stats");
 
-    tempGraph = lv_chart_create(stat_scrn);
-    lv_chart_set_type(tempGraph, LV_CHART_TYPE_LINE);
-    lv_obj_set_size(tempGraph, 230, 110);
-    lv_obj_align(tempGraph, LV_ALIGN_TOP_MID, 0, 50);
-    lv_chart_set_point_count(tempGraph, 100);
-    lv_chart_set_range(tempGraph, LV_CHART_AXIS_PRIMARY_X, 0, 100);
-    lv_chart_set_range(tempGraph, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
-    lv_chart_set_update_mode(tempGraph, LV_CHART_UPDATE_MODE_SHIFT);
-    temp_series = lv_chart_add_series(tempGraph, btn_color, LV_CHART_AXIS_PRIMARY_Y);
+    temp_graph = lv_chart_create(stat_scrn);
+    lv_chart_set_type(temp_graph, LV_CHART_TYPE_LINE);
+    lv_obj_set_size(temp_graph, 230, 110);
+    lv_obj_align(temp_graph, LV_ALIGN_TOP_MID, 0, 50);
+    lv_chart_set_point_count(temp_graph, 100);
+    lv_chart_set_range(temp_graph, LV_CHART_AXIS_PRIMARY_X, 0, 100);
+    lv_chart_set_range(temp_graph, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
+    lv_chart_set_update_mode(temp_graph, LV_CHART_UPDATE_MODE_SHIFT);
+    lv_obj_set_style_bg_color(temp_graph, lv_color_hex(0x4A4A4A), 0);
+    lv_obj_set_style_border_color(temp_graph, lv_color_hex(0x242424), LV_PART_MAIN);
+    lv_obj_set_style_line_color(temp_graph, lv_color_hex(0x242424), LV_PART_MAIN);
+    temp_series = lv_chart_add_series(temp_graph, btn_color, LV_CHART_AXIS_PRIMARY_Y);
 
     build_home_button(stat_scrn);
 
@@ -439,11 +447,6 @@ void build_main_screen(){
 
     build_scrn_title(main_scrn, "Home");
 
-    //lv_obj_t *scrn_title = lv_label_create(main_scrn);
-    //lv_label_set_text(scrn_title, "Home");
-    //lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 10);
-    //lv_obj_set_style_text_color(scrn_title, font_color, 0);
-
     //WiFi icon
     wifi_img = lv_img_create(main_scrn);
     lv_obj_align(wifi_img, LV_ALIGN_TOP_RIGHT, -5, 5);
@@ -455,6 +458,7 @@ void build_main_screen(){
     lv_obj_set_size(btn_wifi, 140, 40);
     lv_obj_align(btn_wifi, LV_ALIGN_BOTTOM_MID, 0, -10); //-10 instead?
     lv_obj_set_style_bg_color(btn_wifi, btn_color, 0);
+    remove_shadow(btn_wifi);
 
     lv_obj_t *lbl_wifi = lv_label_create(btn_wifi);
     lv_label_set_text(lbl_wifi, LV_SYMBOL_WIFI);
@@ -470,7 +474,7 @@ void build_main_screen(){
     lv_obj_set_size(btn_stat, 40, 40);
     lv_obj_align(btn_stat, LV_ALIGN_BOTTOM_RIGHT, 0, -10);
     lv_obj_set_style_bg_color(btn_stat, btn_color, 0);
-
+    remove_shadow(btn_stat);
     lv_obj_t *stat_lbl = lv_label_create(btn_stat);
     lv_label_set_text(stat_lbl, "Stats");
     lv_obj_center(stat_lbl);
@@ -486,6 +490,7 @@ void build_main_screen(){
     lv_obj_set_size(stnBtn, 40, 40);
     lv_obj_align(stnBtn, LV_ALIGN_BOTTOM_LEFT, 0, -10);
     lv_obj_set_style_bg_color(stnBtn, btn_color, 0);
+    remove_shadow(stnBtn);
 
     lv_obj_t *lbl = lv_label_create(stnBtn);
     lv_label_set_text(lbl, LV_SYMBOL_SETTINGS);
@@ -527,6 +532,7 @@ void open_add_menu(int slot_index){
         lv_obj_t *btn = lv_btn_create(menu);
         lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, 10 + j * 45);
         lv_obj_set_style_bg_color(btn, btn_color, 0);
+        remove_shadow(btn);
 
         lv_obj_t *lbl = lv_label_create(btn);
         lv_label_set_text(lbl, names[j]);
@@ -565,6 +571,7 @@ void build_settings_screen(){
     lv_obj_set_size(editBtn, 140, 40);
     lv_obj_align(editBtn, LV_ALIGN_TOP_MID, 0, 110);
     lv_obj_set_style_bg_color(editBtn, btn_color, 0);
+    remove_shadow(editBtn);
 
     lv_obj_t *lbl = lv_label_create(editBtn);
     lv_label_set_text(lbl, "Edit Layout");
@@ -623,22 +630,20 @@ void build_edit_screen(){
 
         build_scrn_title(edit_scrn, "Modify Widgets");
 
-        //lv_obj_t *scrn_title = lv_label_create(edit_scrn);
-        //lv_label_set_text(scrn_title, "Modify widgets");
-        //lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 10);
-        //lv_obj_set_style_text_color(scrn_title, font_color, 0);
-
 
         //creating the buttons
         lv_obj_t *btn = lv_btn_create(edit_scrn);
         lv_obj_set_size(btn, 60, 60);
         lv_obj_set_pos(btn, slot_pos[i].x - 30, slot_pos[i].y - 30);
+        remove_shadow(btn);
         
 
         //colors and border looks bad but 
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x000000),LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_color(btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_width(btn, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+        //Ensure all shadow properties are disabled to remove any visible shadow
+        remove_shadow(btn);
 
         lv_obj_t *label = lv_label_create(btn);
         //lv_obj_set_style_text_font(label, &lv_font_montserrat_20, 0);
@@ -657,6 +662,7 @@ void build_edit_screen(){
         } else {
             //remove widget label
             lv_label_set_text(label, "X");
+            lv_obj_set_style_border_color(btn, red_color, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_align(label, LV_ALIGN_CENTER, 20, 20);
             lv_obj_set_style_text_font(label, &lv_font_montserrat_12, 0);
             lv_obj_set_style_text_color(label, red_color, 0);
@@ -671,6 +677,17 @@ void build_edit_screen(){
 
 }
 
+
+void remove_shadow(lv_obj_t *obj) {
+    // Ensure all shadow properties are disabled to remove any visible shadow
+    lv_obj_set_style_shadow_spread(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_opa(obj, LV_OPA_TRANSP, LV_PART_MAIN | LV_STATE_DEFAULT);
+}
+
+
+
+
 //home button for all screens
 void build_home_button(lv_obj_t *screen){
 
@@ -679,6 +696,7 @@ void build_home_button(lv_obj_t *screen){
     lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
     lv_obj_set_size(back, 180, 40);
     lv_obj_set_style_bg_color(back, btn_color, 0);
+    remove_shadow(back);
 
     lv_obj_t *lbl = lv_label_create(back);
     lv_label_set_text(lbl, LV_SYMBOL_HOME);
@@ -969,14 +987,14 @@ void chart_handler(float t){
     if(millis() - lastUpdate < 4000) return;
     lastUpdate = millis();
 
-    if(isnan(t) || !tempGraph || !temp_series) return;
+    if(isnan(t) || !temp_graph || !temp_series) return;
 
     lcd.clear();
     lcd.setCursor(1, 0);
     lcd.print(t);
 
-    lv_chart_set_next_value(tempGraph, temp_series, (lv_coord_t)t);
-    lv_chart_refresh(tempGraph);
+    lv_chart_set_next_value(temp_graph, temp_series, (lv_coord_t)t);
+    lv_chart_refresh(temp_graph);
 
 }
 
