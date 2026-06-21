@@ -558,7 +558,7 @@ static void add_widget_choice_cb(lv_event_t * e){
     build_edit_screen();
 }
 
-
+//--------------------------- Pre menu for adding widgets ---------------------------
 void pre_add_menu(int slot_index){
 
     //add selector pop up menu
@@ -585,13 +585,13 @@ void pre_add_menu(int slot_index){
     lv_obj_center(lbl);
     
     lv_obj_add_event_cb(back_btn, [](lv_event_t * e){
-        build_settings_screen();
+        build_edit_screen();
         lv_scr_load_anim(settings_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 }
 
 
-
+//--------------------------- buttons for pre menu ---------------------------
 void pre_add_menu_btns(lv_obj_t *menu, const char *name, int j, int destination, int slot){
 
     lv_obj_t *btn = lv_btn_create(menu);
@@ -609,7 +609,7 @@ void pre_add_menu_btns(lv_obj_t *menu, const char *name, int j, int destination,
 
 }
 
-
+//--------------------------- Humidity widget selection ---------------------------
 void open_add_menu_humidity(int slot_index){
 
     //add selector pop up menu
@@ -635,8 +635,26 @@ void open_add_menu_humidity(int slot_index){
         AddMenuChoiceData* data = new AddMenuChoiceData{slot_index, widgetTypes[j]};
         lv_obj_add_event_cb(btn, add_widget_choice_cb, LV_EVENT_CLICKED, data);
     }
+
+
+
+    lv_obj_t *back_btn = lv_btn_create(menu);
+    lv_obj_align(back_btn, LV_ALIGN_BOTTOM_MID, 0, -20);
+
+    lv_obj_set_style_bg_color(back_btn, btn_color, 0);
+    remove_shadow(back_btn);
+
+    lv_obj_t *lbl = lv_label_create(back_btn);
+    lv_label_set_text(lbl, "Back");
+    lv_obj_center(lbl);
+    
+    lv_obj_add_event_cb(back_btn, [](lv_event_t * e){
+        int slot_index = (int)(intptr_t)lv_event_get_user_data(e);
+        pre_add_menu(slot_index);
+    }, LV_EVENT_CLICKED, (void*)(intptr_t)slot_index);
 }
 
+//--------------------------- Temp widget selection ---------------------------
 void open_add_menu_temp(int slot_index){
 
     //add selector pop up menu
@@ -662,6 +680,25 @@ void open_add_menu_temp(int slot_index){
         AddMenuChoiceData* data = new AddMenuChoiceData{slot_index, widgetTypes[j]};
         lv_obj_add_event_cb(btn, add_widget_choice_cb, LV_EVENT_CLICKED, data);
     }
+
+
+
+    lv_obj_t *back_btn = lv_btn_create(menu);
+    lv_obj_align(back_btn, LV_ALIGN_BOTTOM_MID, 0, -20);
+
+    lv_obj_set_style_bg_color(back_btn, btn_color, 0);
+    remove_shadow(back_btn);
+
+    lv_obj_t *lbl = lv_label_create(back_btn);
+    lv_label_set_text(lbl, "Back");
+    lv_obj_center(lbl);
+    
+    lv_obj_add_event_cb(back_btn, [](lv_event_t * e){
+        int slot_index = (int)(intptr_t)lv_event_get_user_data(e);
+        pre_add_menu(slot_index);
+    }, LV_EVENT_CLICKED, (void*)(intptr_t)slot_index);
+
+
 }
 
 
