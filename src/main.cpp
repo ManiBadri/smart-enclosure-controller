@@ -113,6 +113,8 @@ void pre_add_menu_btns(lv_obj_t *menu, const char *name, int j, int destination,
 void open_add_menu_humidity(int slot_index);
 void open_add_menu_temp(int slot_index);
 
+void close_menu_cb(lv_event_t *e);
+
 void open_wifi_password_popup(char *ssid);
 
 //for the widget slots
@@ -571,9 +573,24 @@ void pre_add_menu(int slot_index){
     pre_add_menu_btns(menu, names[0], 0, 0, slot_index);
     pre_add_menu_btns(menu, names[1], 1, 1, slot_index);
 
-        
 
+    lv_obj_t *back_btn = lv_btn_create(menu);
+    lv_obj_align(back_btn, LV_ALIGN_BOTTOM_MID, 0, -20);
+
+    lv_obj_set_style_bg_color(back_btn, btn_color, 0);
+    remove_shadow(back_btn);
+
+    lv_obj_t *lbl = lv_label_create(back_btn);
+    lv_label_set_text(lbl, "Back");
+    lv_obj_center(lbl);
+    
+    lv_obj_add_event_cb(back_btn, [](lv_event_t * e){
+        build_settings_screen();
+        lv_scr_load_anim(settings_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
+    }, LV_EVENT_CLICKED, NULL);
 }
+
+
 
 void pre_add_menu_btns(lv_obj_t *menu, const char *name, int j, int destination, int slot){
 
