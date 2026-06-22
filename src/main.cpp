@@ -132,10 +132,18 @@ enum WidgetType {
 
 WidgetType slots[MAX_SLOTS];
 
+const int first_column_x = SCREEN_WIDTH/4;
+const int second_column_x = 3*SCREEN_WIDTH/4;
+
+const int first_row_y = 65;
+const int second_row_y = 145;
+const int third_row_y = 225;
+
+
 //Slot positions for the widgets
 lv_point_t slot_pos[MAX_SLOTS] = {
-    {(SCREEN_WIDTH/4), 60}, {(SCREEN_WIDTH/4), 140}, {(SCREEN_WIDTH/4), 220},
-    {(3*SCREEN_WIDTH/4), 60}, {(3*SCREEN_WIDTH/4), 140}, {(3*SCREEN_WIDTH/4), 220}
+    {first_column_x, first_row_y}, {first_column_x, second_row_y}, {first_column_x, third_row_y},
+    {second_column_x, first_row_y}, {second_column_x, second_row_y}, {second_column_x, third_row_y}
 };
 
 
@@ -312,7 +320,7 @@ void open_wifi_password_popup(char *ssid){
     lv_keyboard_set_textarea(kb, ta);
     lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 14); //ngative to bring more up 
     lv_obj_set_size(kb, SCREEN_WIDTH - 6, SCREEN_HEIGHT/2); 
-    lv_obj_set_style_opa(kb, LV_OPA_COVER, 0); //testing
+    lv_obj_set_style_opa(kb, LV_OPA_COVER, 0); 
     lv_obj_clear_flag(kb, LV_OBJ_FLAG_SCROLLABLE); 
 
     //create data after ta exists
@@ -811,7 +819,7 @@ void build_edit_screen(){
             lv_obj_add_event_cb(btn, [](lv_event_t * e){
                 int index = (int)lv_event_get_user_data(e);
                 //open_add_menu(index);
-                pre_add_menu(index); //TEST
+                pre_add_menu(index); 
             }, LV_EVENT_CLICKED, (void*)i);
         } else {
             //remove widget label
@@ -1053,7 +1061,7 @@ void updateHumidity(){
 
     for(int i = 0; i < MAX_SLOTS; i++){
 
-        //TEST: trying to add label too middle of arc
+        
         //update arc widgets
         if(slots[i] == WIDGET_HUMIDITY_ARC && slot_obj[i]){
             lv_arc_set_value(slot_obj[i], (int)(h + 0.5)); // rounded
