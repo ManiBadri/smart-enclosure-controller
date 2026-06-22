@@ -373,9 +373,16 @@ void create_widget_for_slot(int i){
             lv_obj_set_style_arc_width(arc, 6, LV_PART_MAIN);
             lv_obj_set_style_arc_width(arc, 6, LV_PART_INDICATOR);
             lv_obj_remove_style(arc, NULL, LV_PART_KNOB);
+
+            lv_obj_t *lbl = lv_label_create(main_scrn);
+            lv_label_set_text(lbl, "--%");
+            lv_obj_set_style_text_font(lbl, &lv_font_montserrat_10, 0);
+            lv_obj_set_pos(lbl, slot_pos[i].x - 15, slot_pos[i].y - 5);
+            lv_obj_set_style_text_color(lbl, lv_color_white(), 0);
+
                 
             slot_obj[i] = arc;
-            slot_label[i] = NULL;
+            slot_label[i] = lbl;
         } break;
 
         case WIDGET_HUMIDITY_TEXT:{
@@ -528,6 +535,8 @@ void slot_click_event(lv_event_t * e){
         slots[index] = WIDGET_NONE;
         save_slots();
         build_edit_screen();
+        //build_main_screen();
+        
     }
 }
 
@@ -880,7 +889,6 @@ void build_scrn_title(lv_obj_t *screen, const char *title_text){
     
 }
 
-
 //--------------------------- SETUP ---------------------------
 void setup(){
 
@@ -1041,13 +1049,15 @@ void updateHumidity(){
 
 
     char buf[32];
-    sprintf(buf, "Hum: %.1f%%", h);
+    sprintf(buf, "%.1f%%", h);
 
     for(int i = 0; i < MAX_SLOTS; i++){
 
+        //TEST: trying to add label too middle of arc
         //update arc widgets
         if(slots[i] == WIDGET_HUMIDITY_ARC && slot_obj[i]){
             lv_arc_set_value(slot_obj[i], (int)(h + 0.5)); // rounded
+            lv_label_set_text(slot_label[i], buf);
         }
 
         //update text widgets
