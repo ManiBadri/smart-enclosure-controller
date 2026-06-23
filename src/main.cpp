@@ -65,6 +65,7 @@ lv_obj_t *settings_scrn;
 lv_obj_t *edit_scrn;
 lv_obj_t *wifi_scrn;
 lv_obj_t *stat_scrn;
+lv_obj_t *edit_pet_scrn;
 
 
 //Buttons (global for theme)
@@ -102,6 +103,7 @@ void build_edit_screen();
 void build_stat_screen();
 void build_main_screen();
 void build_settings_screen();
+void build_edit_pets_screen();
 
 
 void build_home_button(lv_obj_t *screen);
@@ -186,6 +188,14 @@ struct WifiConnectData {
     lv_obj_t* ta;
 };
 
+struct Pet{
+    String name;
+    String species;
+    int age;
+    String sex;
+
+};
+
 struct AddMenuRouteData {
     int slot;
     int destination;
@@ -225,8 +235,8 @@ void build_wifi_screen(){
     lv_obj_set_size(list, 220, 200);
     lv_obj_align(list, LV_ALIGN_TOP_MID, 0, 40);
     //lv_obj_get_style_bg_color(list, wifi_box_color); 
-    lv_obj_set_style_bg_color(list, wifi_box_color, 0); //only out bar not the items
-    lv_obj_set_style_border_color(list, border_color, 0);
+    lv_obj_set_style_bg_color(list, lv_color_white(), 0); //only out bar not the items
+    lv_obj_set_style_border_color(list, lv_color_white(), 0);
 
     //show scanning text
     lv_obj_t *loading = lv_label_create(wifi_scrn);
@@ -361,10 +371,11 @@ void open_wifi_password_popup(char *ssid){
         delete data;
 
         //after return to main screen
-        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_MOVE_TOP, 300, 0, false);
+        lv_scr_load_anim(main_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
 
     }, LV_EVENT_CLICKED, data);
 }
+
 
 
 //--------------------------- Widget Creation ---------------------------
@@ -437,6 +448,26 @@ void create_widget_for_slot(int i){
     }
 }
 
+//--------------------------- Edit Pets Screen ---------------------------
+void build_edit_pets_screen(){
+
+    edit_pet_scrn = lv_obj_create(NULL);
+    
+    
+    lv_obj_set_style_bg_color(edit_pet_scrn, lv_color_black(), 0);
+
+    build_scrn_title(edit_pet_scrn, "Pets");
+
+    build_home_button(edit_pet_scrn); //should be a back to settings button instead(?)
+
+    lv_scr_load(edit_pet_scrn);
+
+
+    
+}
+
+
+
 //--------------------------- STAT SCREEN UI ---------------------------
 void build_stat_screen(){
     if(stat_screen_initialized) return;
@@ -466,7 +497,7 @@ void build_stat_screen(){
 
 //--------------------------- MAIN SCREEN ---------------------------
 void build_main_screen(){
-    lv_obj_clean(main_scrn);
+    lv_obj_clean(main_scrn); //CHECK: maybe remove (problem)?
 
     lv_obj_set_style_bg_color(main_scrn, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(main_scrn, LV_OPA_COVER, 0);
@@ -496,7 +527,7 @@ void build_main_screen(){
 
     lv_obj_add_event_cb(btn_wifi, [](lv_event_t * e){
         build_wifi_screen();
-        lv_scr_load_anim(wifi_scrn, LV_SCR_LOAD_ANIM_MOVE_TOP, 300, 0, false);
+        lv_scr_load_anim(wifi_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 
     //Stats button
@@ -511,7 +542,7 @@ void build_main_screen(){
 
     lv_obj_add_event_cb(btn_stat, [](lv_event_t * e){
         build_stat_screen();
-        lv_scr_load_anim(stat_scrn, LV_SCR_LOAD_ANIM_MOVE_LEFT, 300, 0, false);
+        lv_scr_load_anim(stat_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 
 
@@ -528,7 +559,7 @@ void build_main_screen(){
 
     lv_obj_add_event_cb(stnBtn, [](lv_event_t * e){
         build_settings_screen();
-        lv_scr_load_anim(settings_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
+        lv_scr_load_anim(settings_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 
 }
@@ -719,7 +750,7 @@ void open_add_menu_temp(int slot_index){
 }
 
 
-//--------------------------- Setting Screen ---------------------------
+//--------------------------- Settings Screen ---------------------------
 void build_settings_screen(){
     settings_scrn = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(settings_scrn, lv_color_black(), 0);
@@ -741,7 +772,7 @@ void build_settings_screen(){
 
     lv_obj_add_event_cb(editBtn, [](lv_event_t * e){
         build_edit_screen();
-        lv_scr_load_anim(edit_scrn, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 300, 0, false);
+        lv_scr_load_anim(edit_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 
 
@@ -763,6 +794,30 @@ void build_settings_screen(){
     if(useFahrenheit){
         lv_obj_add_state(temp_switch, LV_STATE_CHECKED);
     }
+
+
+
+
+    //Edit Pets button (below theme)
+    lv_obj_t *pets_btn = lv_btn_create(settings_scrn);
+    lv_obj_set_size(pets_btn, 140, 40);
+    lv_obj_align(pets_btn, LV_ALIGN_TOP_MID, 0, 160);
+    lv_obj_set_style_bg_color(pets_btn, btn_color, 0);
+    remove_shadow(pets_btn);
+
+    lv_obj_t *pet_lbl = lv_label_create(pets_btn);
+    lv_label_set_text(pet_lbl, "Edit Pets");
+    lv_obj_set_style_text_color(pet_lbl, font_color, 0);
+    lv_obj_center(pet_lbl);
+
+    lv_obj_add_event_cb(pets_btn, [](lv_event_t * e){
+        build_edit_pets_screen();
+        lv_scr_load_anim(edit_pet_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
+    }, LV_EVENT_CLICKED, NULL);
+
+
+
+
 
     lv_scr_load(settings_scrn);
 
@@ -988,8 +1043,6 @@ void setup(){
     useFahrenheit = prefs.getBool("useF", false);
 
     build_stat_screen();
-
-    //SETTINGS SCREEN BUTTON
 
     Serial.println(esp_reset_reason());
 
