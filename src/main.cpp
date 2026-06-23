@@ -726,11 +726,11 @@ void build_settings_screen(){
 
     build_scrn_title(settings_scrn, "Settings");
 
-    
+    //convert hard code
     //Edit Layout button (below theme)
     lv_obj_t *editBtn = lv_btn_create(settings_scrn);
     lv_obj_set_size(editBtn, 140, 40);
-    lv_obj_align(editBtn, LV_ALIGN_TOP_MID, 0, 110);
+    lv_obj_align(editBtn, LV_ALIGN_TOP_MID, 0, 60);
     lv_obj_set_style_bg_color(editBtn, btn_color, 0);
     remove_shadow(editBtn);
 
@@ -751,12 +751,12 @@ void build_settings_screen(){
     //Temp Unit Label
     lv_obj_t *temp_label = lv_label_create(settings_scrn);
     lv_label_set_text(temp_label, "Fahrenheit");
-    lv_obj_align(temp_label, LV_ALIGN_TOP_LEFT, 10, 170);
+    lv_obj_align(temp_label, LV_ALIGN_TOP_LEFT, 10, 125);
     lv_obj_set_style_text_color(temp_label, font_color, 0);
 
     //switch for temp
     lv_obj_t *temp_switch = lv_switch_create(settings_scrn);
-    lv_obj_align(temp_switch, LV_ALIGN_TOP_RIGHT, -20, 165);
+    lv_obj_align(temp_switch, LV_ALIGN_TOP_RIGHT, -20, 120);
     lv_obj_set_style_bg_color(temp_switch, btn_color, LV_PART_INDICATOR | LV_STATE_CHECKED);
 
     //set initial state
@@ -878,7 +878,7 @@ void build_scrn_title(lv_obj_t *screen, const char *title_text){
     lv_coord_t title_radius = 6;
 
     lv_obj_t *title_rect = lv_obj_create(screen);
-    lv_obj_set_size(title_rect, SCREEN_WIDTH - 80, 25);
+    lv_obj_set_size(title_rect, SCREEN_WIDTH - 60, 25);
     lv_obj_align(title_rect, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_bg_color(title_rect, title_bg_color, 0);
     lv_obj_set_style_bg_opa(title_rect, LV_OPA_COVER, 0);
