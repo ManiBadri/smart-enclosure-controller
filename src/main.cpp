@@ -451,19 +451,57 @@ void create_widget_for_slot(int i){
 //--------------------------- Edit Pets Screen ---------------------------
 void build_edit_pets_screen(){
 
+    Pet pets[20];
+
     edit_pet_scrn = lv_obj_create(NULL);
-    
-    
+
     lv_obj_set_style_bg_color(edit_pet_scrn, lv_color_black(), 0);
 
     build_scrn_title(edit_pet_scrn, "Pets");
 
     build_home_button(edit_pet_scrn); //should be a back to settings button instead(?)
 
-    lv_scr_load(edit_pet_scrn);
-
+    lv_obj_t *add_pet_btn = lv_btn_create(edit_pet_scrn);
+    lv_obj_set_size(add_pet_btn, 80, 20);
+    lv_obj_align(add_pet_btn, LV_ALIGN_TOP_MID, 0, 40);
+    remove_shadow(add_pet_btn);
+    
+    lv_obj_t *lbl = lv_label_create(add_pet_btn);
+    lv_label_set_text(lbl, "+");
+    lv_obj_set_style_text_font(lbl, &lv_font_montserrat_20, 0);
+    //lv_obj_set_pos(lbl, slot_pos[i].x - 15, slot_pos[i].y - 5);
+    lv_obj_align(lbl, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_text_color(lbl, font_color, 0);
 
     
+
+    if(pets[0].name == NULL){
+        lv_obj_t *lbl = lv_label_create(edit_pet_scrn);
+        lv_label_set_text(lbl, "No pets added");
+        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_20, 0);
+        //lv_obj_set_pos(lbl, slot_pos[i].x - 15, slot_pos[i].y - 5);
+        lv_obj_align(lbl, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_set_style_text_color(lbl, font_color, 0);
+    }else{
+        lv_obj_t *pet_list = lv_list_create(edit_pet_scrn);  
+        lv_obj_set_size(pet_list, 220, 200);
+        lv_obj_align(pet_list, LV_ALIGN_TOP_MID, 0, 50);
+        //lv_obj_get_style_bg_color(list, wifi_box_color); 
+        lv_obj_set_style_bg_color(pet_list, lv_color_white(), 0); //only out bar not the items
+        lv_obj_set_style_border_color(pet_list, lv_color_white(), 0);
+
+        for(int i = 0; i < 20; i++){
+            lv_obj_t *btn = lv_list_add_btn(pet_list, LV_SYMBOL_WIFI, pets[i].name.c_str());
+            lv_obj_set_style_bg_color(btn, wifi_box_color, 0);
+            //lv_obj_set_style_border_color(btn, wifi_box_color,0);
+            lv_obj_set_style_arc_color(btn, wifi_box_color,0);
+        }
+    }
+
+
+
+    lv_scr_load(edit_pet_scrn);
+
 }
 
 
