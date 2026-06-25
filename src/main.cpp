@@ -126,6 +126,13 @@ void close_menu_cb(lv_event_t *e);
 
 void open_wifi_password_popup(char *ssid);
 
+
+//MYTESTS
+int hist_num[60];
+int mynum = 50;
+lv_obj_t *test_graph;
+lv_chart_series_t *test_series;
+
 //for the widget slots
 lv_obj_t* slot_obj[MAX_SLOTS];   // main widget (arc, bar, etc.)
 lv_obj_t* slot_label[MAX_SLOTS]; // for text widgets (optional)
@@ -464,15 +471,18 @@ void build_edit_pets_screen(){
 
     lv_obj_set_style_bg_color(edit_pet_scrn, lv_color_black(), 0);
 
+
     build_scrn_title(edit_pet_scrn, "Pets");
+
 
     build_home_button(edit_pet_scrn); //should be a back to settings button instead(?)
 
     lv_obj_t *add_pet_btn = lv_btn_create(edit_pet_scrn);
     lv_obj_set_size(add_pet_btn, 80, 20);
     lv_obj_align(add_pet_btn, LV_ALIGN_TOP_MID, 0, 40);
-    remove_shadow(add_pet_btn);
+    lv_obj_add_style(add_pet_btn, &def_button_style, 0);
     
+
     lv_obj_t *lbl = lv_label_create(add_pet_btn);
     lv_label_set_text(lbl, "+");
     lv_obj_set_style_text_font(lbl, &lv_font_montserrat_20, 0);
@@ -485,7 +495,7 @@ void build_edit_pets_screen(){
         lv_scr_load_anim(add_pet_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
 
-    
+
 
     if(pets[0].name == NULL){
         lv_obj_t *lbl = lv_label_create(edit_pet_scrn);
@@ -524,6 +534,9 @@ void build_add_pet_screen(){
 
     build_scrn_title(add_pet_scrn, "Add Pet");
 
+    lv_obj_t *lbl = lv_label_create(edit_pet_scrn);
+    lv_label_set_text(lbl, "No pets added");
+
 
 
     build_home_button(add_pet_scrn);
@@ -541,10 +554,15 @@ void build_stat_screen(){
 
     build_scrn_title(stat_scrn, "Stats");
 
-    temp_graph = lv_chart_create(stat_scrn);
+
+    lv_obj_t *panel = lv_obj_create(stat_scrn);
+    lv_obj_set_size(panel, SCREEN_WIDTH, SCREEN_HEIGHT - 80);
+    lv_obj_align(panel, LV_ALIGN_CENTER, 0 , -25);
+
+    temp_graph = lv_chart_create(panel);
     lv_chart_set_type(temp_graph, LV_CHART_TYPE_LINE);
-    lv_obj_set_size(temp_graph, 230, 110);
-    lv_obj_align(temp_graph, LV_ALIGN_TOP_MID, 0, 50);
+    lv_obj_set_size(temp_graph, SCREEN_WIDTH - 10, 110);
+    lv_obj_align(temp_graph, LV_ALIGN_TOP_MID, 0, 0);
     lv_chart_set_point_count(temp_graph, 100);
     lv_chart_set_range(temp_graph, LV_CHART_AXIS_PRIMARY_X, 0, 100);
     lv_chart_set_range(temp_graph, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
@@ -553,6 +571,21 @@ void build_stat_screen(){
     lv_obj_set_style_border_color(temp_graph, lv_color_hex(0x242424), LV_PART_MAIN);
     lv_obj_set_style_line_color(temp_graph, lv_color_hex(0x242424), LV_PART_MAIN);
     temp_series = lv_chart_add_series(temp_graph, btn_color, LV_CHART_AXIS_PRIMARY_Y);
+
+
+    test_graph = lv_chart_create(panel);
+    lv_chart_set_type(test_graph, LV_CHART_TYPE_LINE);
+    lv_obj_set_size(test_graph, SCREEN_WIDTH - 10, 110);
+    lv_obj_align(test_graph, LV_ALIGN_TOP_MID, 0, 120);
+    lv_chart_set_point_count(test_graph, 100);
+    lv_chart_set_range(test_graph, LV_CHART_AXIS_PRIMARY_X, 0, 100);
+    lv_chart_set_range(test_graph, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
+    lv_chart_set_update_mode(test_graph, LV_CHART_UPDATE_MODE_SHIFT);
+    lv_obj_set_style_bg_color(test_graph, lv_color_hex(0x4A4A4A), 0);
+    lv_obj_set_style_border_color(test_graph, lv_color_hex(0x242424), LV_PART_MAIN);
+    lv_obj_set_style_line_color(test_graph, lv_color_hex(0x242424), LV_PART_MAIN);
+    test_series = lv_chart_add_series(test_graph, btn_color, LV_CHART_AXIS_PRIMARY_Y);
+
 
     build_home_button(stat_scrn);
 
@@ -718,8 +751,6 @@ void pre_add_menu_btns(lv_obj_t *menu, const char *name, int j, int destination,
 
     AddMenuRouteData* data = new AddMenuRouteData{slot, destination};
     lv_obj_add_event_cb(btn, open_add_menu_route_cb, LV_EVENT_CLICKED, data);
-
-
 }
 
 //--------------------------- Humidity widget selection ---------------------------
@@ -748,8 +779,6 @@ void open_add_menu_humidity(int slot_index){
         AddMenuChoiceData* data = new AddMenuChoiceData{slot_index, widgetTypes[j]};
         lv_obj_add_event_cb(btn, add_widget_choice_cb, LV_EVENT_CLICKED, data);
     }
-
-
 
     lv_obj_t *back_btn = lv_btn_create(menu);
     lv_obj_align(back_btn, LV_ALIGN_BOTTOM_MID, 0, -20);
@@ -793,8 +822,6 @@ void open_add_menu_temp(int slot_index){
         AddMenuChoiceData* data = new AddMenuChoiceData{slot_index, widgetTypes[j]};
         lv_obj_add_event_cb(btn, add_widget_choice_cb, LV_EVENT_CLICKED, data);
     }
-
-
 
     lv_obj_t *back_btn = lv_btn_create(menu);
     lv_obj_align(back_btn, LV_ALIGN_BOTTOM_MID, 0, -20);
@@ -842,7 +869,6 @@ void build_settings_screen(){
     }, LV_EVENT_CLICKED, NULL);
 
 
-
     build_home_button(settings_scrn);
 
     //Temp Unit Label
@@ -879,9 +905,6 @@ void build_settings_screen(){
     }, LV_EVENT_CLICKED, NULL);
 
 
-
-
-
     lv_scr_load(settings_scrn);
 
     //temp switch event
@@ -909,16 +932,14 @@ void build_edit_screen(){
 
         build_scrn_title(edit_scrn, "Modify Widgets");
 
-
         //creating the buttons
         lv_obj_t *btn = lv_btn_create(edit_scrn);
         lv_obj_set_size(btn, 60, 60);
         lv_obj_set_pos(btn, slot_pos[i].x - 30, slot_pos[i].y - 30);
         remove_shadow(btn);
         
-
         //colors and border looks bad but 
-        lv_obj_set_style_bg_color(btn, lv_color_hex(0x000000),LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_color(btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_width(btn, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
         //Ensure all shadow properties are disabled to remove any visible shadow
@@ -952,9 +973,7 @@ void build_edit_screen(){
         lv_obj_center(label);
     }
 
-
     build_home_button(edit_scrn);
-
 }
 
 
@@ -968,7 +987,6 @@ void remove_shadow(lv_obj_t *obj) {
 
 //home button for all screens
 void build_home_button(lv_obj_t *screen){
-
     //Back
     lv_obj_t *back = lv_btn_create(screen);
     lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
@@ -990,26 +1008,12 @@ void build_home_button(lv_obj_t *screen){
 //--------------------------- Title Builder ---------------------------
 //screen title builder for all screens
 void build_scrn_title(lv_obj_t *screen, const char *title_text){
-
-    //lv_color_t title_bg_color = lv_color_hex(0x2E2E2E);
-    // = btn_color; //use theme color for title background
-    //lv_coord_t title_radius = 6;
-
     lv_obj_t *title_rect = lv_obj_create(screen);
     lv_obj_set_size(title_rect, SCREEN_WIDTH, 25); // was -60 width
     lv_obj_align(title_rect, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_add_style(title_rect, &def_button_style, 0);
-    //lv_obj_set_style_bg_color(title_rect, title_bg_color, 0);
-    //lv_obj_set_style_bg_opa(title_rect, LV_OPA_COVER, 0);
-    //lv_obj_set_style_border_width(title_rect, 0, 0);
-    //lv_obj_set_style_radius(title_rect, title_radius, 0);
-
-
-    //lv_obj_set_style_clip_corner(title_rect, true, 0);
-
-
+    
     lv_obj_clear_flag(title_rect, LV_OBJ_FLAG_SCROLLABLE);
-
 
     lv_obj_t *scrn_title = lv_label_create(screen);
     lv_label_set_text(scrn_title, title_text);
@@ -1017,14 +1021,10 @@ void build_scrn_title(lv_obj_t *screen, const char *title_text){
     lv_obj_set_style_text_font(scrn_title, &lv_font_montserrat_14, 0);
     lv_obj_align(scrn_title, LV_ALIGN_TOP_MID, 0, 5);
 
-    
 }
 
 //--------------------------- SETUP ---------------------------
 void setup(){
-
-    
-    
 
     //setting up debug terminal LCD ports
     Wire.begin(21,22); //SDA,SCL
@@ -1117,9 +1117,6 @@ void setup(){
 
     Serial.println(esp_reset_reason());
 
-
-    
-
     build_main_screen();
     lv_scr_load(main_scrn);
 
@@ -1138,8 +1135,6 @@ void setup(){
     lv_style_set_border_width(&def_button_style, 2);
     lv_style_set_shadow_color(&def_button_style, btn_border_color);
     lv_style_set_shadow_width(&def_button_style, 25);
-
-
 
     //force first draw
     lv_timer_handler();   
@@ -1179,10 +1174,8 @@ void updateHumidity(){
     if(millis() - lastUpdate < 4000) return;
     lastUpdate = millis();
 
-
     float h = dht.readHumidity();
     if(isnan(h)) return;
-
 
     if(h < 0) h = 0;
     if(h > 100) h = 100;
@@ -1192,7 +1185,6 @@ void updateHumidity(){
     sprintf(buf, "%.1f%%", h);
 
     for(int i = 0; i < MAX_SLOTS; i++){
-
         
         //update arc widgets
         if(slots[i] == WIDGET_HUMIDITY_ARC && slot_obj[i]){
@@ -1214,7 +1206,6 @@ float CheckTemp(){
     //update every 4 seconds
     if(millis() - lastUpdate < 3000) return NAN;
     lastUpdate = millis();
-
 
     float h = dht.readHumidity();
     if(isnan(h)) return NAN;
@@ -1290,6 +1281,35 @@ void chart_handler(float t){
     lv_chart_refresh(temp_graph);
 
 }
+
+
+//--------------------------- MY TESTS ---------------------------
+
+void handle_test_int(int num){
+
+
+
+
+
+
+}
+
+
+
+void turn_on(int num, int timer){
+
+
+
+}
+
+
+void evalute_int(int hist_num[]){
+
+
+
+
+}
+
 
 //--------------------------- LOOP ---------------------------
 void loop(){
