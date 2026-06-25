@@ -66,6 +66,7 @@ lv_obj_t *edit_scrn;
 lv_obj_t *wifi_scrn;
 lv_obj_t *stat_scrn;
 lv_obj_t *edit_pet_scrn;
+lv_obj_t *add_pet_scrn;
 
 
 //Buttons (global for theme)
@@ -86,6 +87,11 @@ lv_color_t border_color = lv_color_hex(0x3cb371);
 lv_color_t font_color= lv_color_hex(0xC9C7C7);
 lv_color_t red_color = lv_color_hex(0xFF0000);
 lv_color_t btn_color = lv_color_hex(0x212496);
+lv_color_t btn_color_new = lv_color_hex(0x000000);
+lv_color_t btn_border_color = lv_color_hex(0xFFFFFF);
+
+//Styles
+lv_style_t def_button_style;
 
 
 lv_obj_t *temp_graph;
@@ -104,6 +110,7 @@ void build_stat_screen();
 void build_main_screen();
 void build_settings_screen();
 void build_edit_pets_screen();
+void build_add_pet_screen();
 
 
 void build_home_button(lv_obj_t *screen);
@@ -448,7 +455,7 @@ void create_widget_for_slot(int i){
     }
 }
 
-//--------------------------- Edit Pets Screen ---------------------------
+//--------------------------- EDIT PET SCREEN ---------------------------
 void build_edit_pets_screen(){
 
     Pet pets[20];
@@ -473,6 +480,11 @@ void build_edit_pets_screen(){
     lv_obj_align(lbl, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_text_color(lbl, font_color, 0);
 
+    lv_obj_add_event_cb(add_pet_btn, [](lv_event_t * e){
+        build_add_pet_screen();
+        lv_scr_load_anim(add_pet_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
+    }, LV_EVENT_CLICKED, NULL);
+
     
 
     if(pets[0].name == NULL){
@@ -493,7 +505,6 @@ void build_edit_pets_screen(){
         for(int i = 0; i < 20; i++){
             lv_obj_t *btn = lv_list_add_btn(pet_list, LV_SYMBOL_WIFI, pets[i].name.c_str());
             lv_obj_set_style_bg_color(btn, wifi_box_color, 0);
-            //lv_obj_set_style_border_color(btn, wifi_box_color,0);
             lv_obj_set_style_arc_color(btn, wifi_box_color,0);
         }
     }
@@ -504,6 +515,22 @@ void build_edit_pets_screen(){
 
 }
 
+//--------------------------- ADD PET SCREEN ---------------------------
+void build_add_pet_screen(){
+
+    add_pet_scrn = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(add_pet_scrn, lv_color_black(), 0);
+
+
+    build_scrn_title(add_pet_scrn, "Add Pet");
+
+
+
+    build_home_button(add_pet_scrn);
+
+    lv_scr_load(add_pet_scrn);
+
+}
 
 
 //--------------------------- STAT SCREEN UI ---------------------------
@@ -797,18 +824,19 @@ void build_settings_screen(){
 
     //convert hard code
     //Edit Layout button (below theme)
-    lv_obj_t *editBtn = lv_btn_create(settings_scrn);
-    lv_obj_set_size(editBtn, 140, 40);
-    lv_obj_align(editBtn, LV_ALIGN_TOP_MID, 0, 60);
-    lv_obj_set_style_bg_color(editBtn, btn_color, 0);
-    remove_shadow(editBtn);
+    lv_obj_t *edit_btn = lv_btn_create(settings_scrn);
+    lv_obj_set_size(edit_btn, 140, 40);
+    lv_obj_align(edit_btn, LV_ALIGN_TOP_MID, 0, 60);
+    lv_obj_add_style(edit_btn, &def_button_style, 0);
+    //lv_obj_set_style_bg_color(editBtn, btn_color, 0);
+    //remove_shadow(editBtn);
 
-    lv_obj_t *lbl = lv_label_create(editBtn);
+    lv_obj_t *lbl = lv_label_create(edit_btn);
     lv_label_set_text(lbl, "Edit Layout");
     lv_obj_set_style_text_color(lbl, font_color, 0);
     lv_obj_center(lbl);
 
-    lv_obj_add_event_cb(editBtn, [](lv_event_t * e){
+    lv_obj_add_event_cb(edit_btn, [](lv_event_t * e){
         build_edit_screen();
         lv_scr_load_anim(edit_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
     }, LV_EVENT_CLICKED, NULL);
@@ -833,15 +861,12 @@ void build_settings_screen(){
         lv_obj_add_state(temp_switch, LV_STATE_CHECKED);
     }
 
-
-
-
     //Edit Pets button (below theme)
     lv_obj_t *pets_btn = lv_btn_create(settings_scrn);
     lv_obj_set_size(pets_btn, 140, 40);
-    lv_obj_align(pets_btn, LV_ALIGN_TOP_MID, 0, 160);
-    lv_obj_set_style_bg_color(pets_btn, btn_color, 0);
-    remove_shadow(pets_btn);
+    lv_obj_align(pets_btn, LV_ALIGN_TOP_MID, 0, 165);
+    lv_obj_add_style(pets_btn, &def_button_style, 0);
+
 
     lv_obj_t *pet_lbl = lv_label_create(pets_btn);
     lv_label_set_text(pet_lbl, "Edit Pets");
@@ -948,8 +973,8 @@ void build_home_button(lv_obj_t *screen){
     lv_obj_t *back = lv_btn_create(screen);
     lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -10);
     lv_obj_set_size(back, 180, 40);
-    lv_obj_set_style_bg_color(back, btn_color, 0);
-    remove_shadow(back);
+    lv_obj_add_style(back, &def_button_style, 0);
+
 
     lv_obj_t *lbl = lv_label_create(back);
     lv_label_set_text(lbl, LV_SYMBOL_HOME);
@@ -966,18 +991,23 @@ void build_home_button(lv_obj_t *screen){
 //screen title builder for all screens
 void build_scrn_title(lv_obj_t *screen, const char *title_text){
 
-    lv_color_t title_bg_color = lv_color_hex(0x2E2E2E);
-    title_bg_color = btn_color; //use theme color for title background
-    lv_coord_t title_radius = 6;
+    //lv_color_t title_bg_color = lv_color_hex(0x2E2E2E);
+    // = btn_color; //use theme color for title background
+    //lv_coord_t title_radius = 6;
 
     lv_obj_t *title_rect = lv_obj_create(screen);
-    lv_obj_set_size(title_rect, SCREEN_WIDTH - 60, 25);
+    lv_obj_set_size(title_rect, SCREEN_WIDTH, 25); // was -60 width
     lv_obj_align(title_rect, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_bg_color(title_rect, title_bg_color, 0);
-    lv_obj_set_style_bg_opa(title_rect, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(title_rect, 0, 0);
-    lv_obj_set_style_radius(title_rect, title_radius, 0);
-    lv_obj_set_style_clip_corner(title_rect, true, 0);
+    lv_obj_add_style(title_rect, &def_button_style, 0);
+    //lv_obj_set_style_bg_color(title_rect, title_bg_color, 0);
+    //lv_obj_set_style_bg_opa(title_rect, LV_OPA_COVER, 0);
+    //lv_obj_set_style_border_width(title_rect, 0, 0);
+    //lv_obj_set_style_radius(title_rect, title_radius, 0);
+
+
+    //lv_obj_set_style_clip_corner(title_rect, true, 0);
+
+
     lv_obj_clear_flag(title_rect, LV_OBJ_FLAG_SCROLLABLE);
 
 
@@ -992,6 +1022,9 @@ void build_scrn_title(lv_obj_t *screen, const char *title_text){
 
 //--------------------------- SETUP ---------------------------
 void setup(){
+
+    
+    
 
     //setting up debug terminal LCD ports
     Wire.begin(21,22); //SDA,SCL
@@ -1097,6 +1130,14 @@ void setup(){
     lcd.print(WiFi.SSID());
     lcd.setCursor(0,1);
     lcd.print(WiFi.status());
+
+    //style
+    lv_style_init(&def_button_style);
+    lv_style_set_bg_color(&def_button_style, btn_color_new);
+    lv_style_set_border_color(&def_button_style, btn_border_color);
+    lv_style_set_border_width(&def_button_style, 2);
+    lv_style_set_shadow_color(&def_button_style, btn_border_color);
+    lv_style_set_shadow_width(&def_button_style, 25);
 
 
 
