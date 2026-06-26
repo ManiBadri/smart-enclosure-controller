@@ -128,7 +128,13 @@ void open_wifi_password_popup(char *ssid);
 
 
 //MYTESTS
-int hist_num[60];
+struct Node {
+    int data;
+    Node* next;
+    Node(int data = 0, Node* next = nullptr) : data(data), next(next) {}
+};
+
+Node num_log;
 int mynum = 50;
 lv_obj_t *test_graph;
 lv_chart_series_t *test_series;
@@ -194,8 +200,7 @@ void save_slots(){
     for(int i = 0; i < MAX_SLOTS; i++){
         prefs.putUInt(("slot" + String(i)).c_str(), slots[i]);
     }
-}
-
+};
 
 struct WifiConnectData {
     char* ssid;
@@ -1285,26 +1290,74 @@ void chart_handler(float t){
 
 //--------------------------- MY TESTS ---------------------------
 
-void handle_test_int(int num){
+void handle_test_int(){
+    static uint32_t lastUpdate = 0;
 
+    if(millis() - lastUpdate < 300000) return;
+    lastUpdate = millis();
 
+    mynum --;
+}
 
+void log_int(){
+    static uint32_t lastUpdate = 0;
 
+    if(millis() - lastUpdate < 60000) return;
+    lastUpdate = millis();
 
+    if(num_log.next == NULL){
+        num_log.data = mynum;
+    }else{
+        int size = 1;
 
+        Node* q = &num_log;
+        while(q->next != NULL){
+            q = q->next;
+            size++;
+        }
+        if(size < 60){
+            q->next = new Node(mynum, nullptr);
+        }else{
+            Node* oldHead = num_log.next;
+            num_log.data = oldHead->data;
+            num_log.next = oldHead->next;
+            delete oldHead;
+
+            q = &num_log;
+            while(q->next != NULL){
+                q = q->next;
+            }
+            q->next = new Node(mynum, nullptr);
+        }
+    }
 }
 
 
+void put_num_in_graph(){
+
+    static uint32_t lastUpdate = 0;
+
+    if(millis() - lastUpdate < 60000) return;
+    lastUpdate = millis();
+
+
+    lv_chart_set_next_value(test_graph, test_series, (lv_coord_t)mynum);
+    lv_chart_refresh(test_graph);
+
+}
 
 void turn_on(int num, int timer){
+    static uint32_t lastUpdate = 0;
 
+    if(millis() - lastUpdate < 60000) return;
+    lastUpdate = millis();
 
+    
 
 }
 
 
-void evalute_int(int hist_num[]){
-
+void evalute_int(Node num_log){
 
 
 
@@ -1327,6 +1380,10 @@ void loop(){
 
     handleWiFi();
     updateHumidity();
+
+    handle_test_int();
+    log_int();
+    put_num_in_graph();
 
     if(!isnan(currentTemp)){
         updateTemperature(currentTemp);
