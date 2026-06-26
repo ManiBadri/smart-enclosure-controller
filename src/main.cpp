@@ -133,7 +133,8 @@ struct Node {
     Node* next;
     Node(int data = 0, Node* next = nullptr) : data(data), next(next) {}
 };
-
+int counter_off = 0;
+int counter_on = 0;
 Node num_log;
 int mynum = 50;
 lv_obj_t *test_graph;
@@ -562,7 +563,10 @@ void build_stat_screen(){
 
     lv_obj_t *panel = lv_obj_create(stat_scrn);
     lv_obj_set_size(panel, SCREEN_WIDTH, SCREEN_HEIGHT - 80);
-    lv_obj_align(panel, LV_ALIGN_CENTER, 0 , -25);
+    lv_obj_align(panel, LV_ALIGN_CENTER, 0 , -15);
+    lv_obj_set_scroll_dir(panel, LV_DIR_VER);
+    lv_obj_set_style_bg_color(panel, lv_color_black(), 0);
+    lv_obj_set_style_border_width(panel, 0, 0);
 
     temp_graph = lv_chart_create(panel);
     lv_chart_set_type(temp_graph, LV_CHART_TYPE_LINE);
@@ -1346,19 +1350,45 @@ void put_num_in_graph(){
 
 }
 
-void turn_on(int num, int timer){
+void turn_on(){
     static uint32_t lastUpdate = 0;
+    bool turned_on = false;
 
     if(millis() - lastUpdate < 60000) return;
     lastUpdate = millis();
+    counter_off++;
+    if(counter_off > 5){
+        turned_on = true;
+    }
+    if(turned_on){
+        mynum = mynum + 2;
+        counter_on++;
+        if(counter_on > 2){
+            turned_on = false;
+            counter_off = 0;
+            counter_on = 0;
+        }
+    }
 
-    
 
 }
 
 
-void evalute_int(Node num_log){
+void evalute_int(){
+    static uint32_t lastUpdate = 0;
+    if(millis() - lastUpdate < 1800000) return;
+    lastUpdate = millis();
 
+    Node *q = &num_log;
+    while(q->next != nullptr){
+        q = q->next;
+    }
+    if(q->data > num_log.data){ //recent higher than older so we have to counter off ++
+        counter_off++;
+    }
+    if(q->data < num_log.data){
+        counter_off--;
+    }
 
 
 }
@@ -1384,6 +1414,8 @@ void loop(){
     handle_test_int();
     log_int();
     put_num_in_graph();
+    turn_on();
+    evalute_int();
 
     if(!isnan(currentTemp)){
         updateTemperature(currentTemp);
