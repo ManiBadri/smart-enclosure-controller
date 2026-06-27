@@ -134,6 +134,7 @@ struct Node {
     Node(int data = 0, Node* next = nullptr) : data(data), next(next) {}
 };
 int counter_off = 0;
+int counter_off_limit = 5;
 int counter_on = 0;
 Node num_log;
 int mynum = 50;
@@ -1282,9 +1283,9 @@ void chart_handler(float t){
 
     if(isnan(t) || !temp_graph || !temp_series) return;
 
-    lcd.clear();
-    lcd.setCursor(1, 0);
-    lcd.print(t);
+    //lcd.clear();
+    //lcd.setCursor(1, 0);
+    //lcd.print(t);
 
     lv_chart_set_next_value(temp_graph, temp_series, (lv_coord_t)t);
     lv_chart_refresh(temp_graph);
@@ -1301,6 +1302,7 @@ void handle_test_int(){
     lastUpdate = millis();
 
     mynum --;
+    
 }
 
 void log_int(){
@@ -1350,6 +1352,7 @@ void put_num_in_graph(){
 
 }
 
+
 void turn_on(){
     static uint32_t lastUpdate = 0;
     bool turned_on = false;
@@ -1357,11 +1360,11 @@ void turn_on(){
     if(millis() - lastUpdate < 60000) return;
     lastUpdate = millis();
     counter_off++;
-    if(counter_off > 5){
+    if(counter_off > counter_off_limit){
         turned_on = true;
     }
     if(turned_on){
-        mynum = mynum + 2;
+        mynum ++;
         counter_on++;
         if(counter_on > 2){
             turned_on = false;
@@ -1376,23 +1379,26 @@ void turn_on(){
 
 void evalute_int(){
     static uint32_t lastUpdate = 0;
-    if(millis() - lastUpdate < 1800000) return;
+    if(millis() - lastUpdate < 600000) return;
     lastUpdate = millis();
-
+    int counter = 0;
     Node *q = &num_log;
     while(q->next != nullptr){
         q = q->next;
+        counter++;
+        if(counter == 10){
+            break;
+        }
     }
-    if(q->data > num_log.data){ //recent higher than older so we have to counter off ++
-        counter_off++;
+    if(num_log.data > 60){ //recent higher than older so we have to counter off ++ USEDTOBE:num_log.data
+        if(num_log.data > q->data)
+            counter_off_limit++;
     }
-    if(q->data < num_log.data){
-        counter_off--;
+    if(num_log.data < 60){
+        if(num_log.data < q->data)
+            counter_off_limit--;
     }
-
-
 }
-
 
 //--------------------------- LOOP ---------------------------
 void loop(){
@@ -1400,9 +1406,9 @@ void loop(){
     static bool isDimmed = false;
     float currentTemp = CheckTemp();
 
-    lcd.clear(); 
+    lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(lv_disp_get_inactive_time(NULL));
+    lcd.print(mynum);
 
     lv_timer_handler();
 
@@ -1414,6 +1420,7 @@ void loop(){
     handle_test_int();
     log_int();
     put_num_in_graph();
+
     turn_on();
     evalute_int();
 
