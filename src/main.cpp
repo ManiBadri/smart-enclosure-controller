@@ -27,6 +27,9 @@ String wifi_password = "";
 const int wifiRedLed = 32;
 const int wifiGrnLed = 26;
 
+const int blueLed = 13;
+const int redLed = 12;
+
 //Backlight pin
 const int tftBackLight = 4;
 
@@ -140,6 +143,9 @@ Node num_log;
 int mynum = 50;
 lv_obj_t *test_graph;
 lv_chart_series_t *test_series;
+bool is_on = false;
+
+
 
 //for the widget slots
 lv_obj_t* slot_obj[MAX_SLOTS];   // main widget (arc, bar, etc.)
@@ -1052,6 +1058,9 @@ void setup(){
     pinMode(wifiRedLed, OUTPUT);
     pinMode(wifiGrnLed, OUTPUT);
 
+    pinMode(redLed, OUTPUT);
+    pinMode(blueLed, OUTPUT);
+
     load_wifi_credentials();
 
     if(wifi_ssid.length() > 0 && wifi_password.length() > 0){
@@ -1295,15 +1304,15 @@ void chart_handler(float t){
 
 //--------------------------- MY TESTS ---------------------------
 
-void handle_test_int(){
-    static uint32_t lastUpdate = 0;
-
-    if(millis() - lastUpdate < 300000) return;
-    lastUpdate = millis();
-
-    mynum --;
-    
-}
+//void handle_test_int(){
+//    static uint32_t lastUpdate = 0;
+//
+//    if(millis() - lastUpdate < 300000) return;
+//    lastUpdate = millis();
+//
+//    mynum --;
+//    
+//}
 
 void log_int(){
     static uint32_t lastUpdate = 0;
@@ -1340,39 +1349,62 @@ void log_int(){
 
 
 void put_num_in_graph(){
-
     static uint32_t lastUpdate = 0;
+    static bool seeded = false;
+
+    if(!test_graph || !test_series) return;
+
+    if(!seeded){
+        int graph_value = constrain(mynum, 0, 100);
+        for(int i = 0; i < 6; i++){
+            lv_chart_set_next_value(test_graph, test_series, (lv_coord_t)graph_value);
+        }
+        lv_chart_refresh(test_graph);
+        seeded = true;
+        lastUpdate = millis();
+        return;
+    }
 
     if(millis() - lastUpdate < 60000) return;
     lastUpdate = millis();
 
-
-    lv_chart_set_next_value(test_graph, test_series, (lv_coord_t)mynum);
+    int graph_value = constrain(mynum, 0, 100);
+    lv_chart_set_next_value(test_graph, test_series, (lv_coord_t)graph_value);
     lv_chart_refresh(test_graph);
-
 }
 
 
-void turn_on(){
-    static uint32_t lastUpdate = 0;
-    bool turned_on = false;
-
-    if(millis() - lastUpdate < 60000) return;
-    lastUpdate = millis();
+bool turn_on(){
+    //static uint32_t lastUpdate = 0;
+    //if(millis() - lastUpdate < 60000) return;
+    //lastUpdate = millis();
     counter_off++;
     if(counter_off > counter_off_limit){
-        turned_on = true;
-    }
-    if(turned_on){
-        mynum ++;
+        //turned_on = true;
         counter_on++;
+        
         if(counter_on > 2){
-            turned_on = false;
-            counter_off = 0;
             counter_on = 0;
+            counter_off = 0;
+            is_on = false;
+            return false;
         }
+        is_on = true;
+        return true;
+    }else{
+        is_on = false;
+        return false;
     }
-
+    
+    //if(turned_on){
+    //    mynum ++;
+    //    counter_on++;
+    //    if(counter_on > 2){
+    //        turned_on = false;
+    //        counter_off = 0;
+    //        counter_on = 0;
+    //    }
+    //}
 
 }
 
@@ -1400,6 +1432,20 @@ void evalute_int(){
     }
 }
 
+
+void num_handler(){
+
+    static uint32_t lastUpdate = 0;
+    if(millis() - lastUpdate < 60000) return;
+    lastUpdate = millis();
+
+    if(turn_on()){
+        mynum++;
+    }else{
+        mynum--;
+    }
+}
+
 //--------------------------- LOOP ---------------------------
 void loop(){
 
@@ -1417,12 +1463,20 @@ void loop(){
     handleWiFi();
     updateHumidity();
 
-    handle_test_int();
-    log_int();
-    put_num_in_graph();
-
-    turn_on();
+    //handle_test_int();
+    
+    num_handler();
     evalute_int();
+    put_num_in_graph();
+    log_int();
+
+    if(is_on){
+        digitalWrite(blueLed, HIGH);
+        digitalWrite(redLed, LOW);
+    }else{
+        digitalWrite(blueLed, LOW);
+        digitalWrite(redLed, HIGH);
+    }
 
     if(!isnan(currentTemp)){
         updateTemperature(currentTemp);
