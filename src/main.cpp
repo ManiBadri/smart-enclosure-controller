@@ -1320,13 +1320,13 @@ void log_int(){
     if(millis() - lastUpdate < 60000) return;
     lastUpdate = millis();
 
-    if(num_log.next == NULL){
+    if(num_log.data == 0){
         num_log.data = mynum;
     }else{
         int size = 1;
 
         Node* q = &num_log;
-        while(q->next != NULL){
+        while(q->next != nullptr){
             q = q->next;
             size++;
         }
@@ -1339,7 +1339,7 @@ void log_int(){
             delete oldHead;
 
             q = &num_log;
-            while(q->next != NULL){
+            while(q->next != nullptr){
                 q = q->next;
             }
             q->next = new Node(mynum, nullptr);
@@ -1411,24 +1411,27 @@ bool turn_on(){
 
 void evalute_int(){
     static uint32_t lastUpdate = 0;
-    if(millis() - lastUpdate < 600000) return;
+
+    if(millis() - lastUpdate < 5000) return;
     lastUpdate = millis();
-    int counter = 0;
+
     Node *q = &num_log;
     while(q->next != nullptr){
         q = q->next;
-        counter++;
-        if(counter == 10){
-            break;
-        }
     }
-    if(num_log.data > 60){ //recent higher than older so we have to counter off ++ USEDTOBE:num_log.data
-        if(num_log.data > q->data)
-            counter_off_limit++;
+
+    if(q == nullptr) return;
+
+    int prev_value = q->data;
+
+    if(mynum > 60){
+        counter_off_limit++;
+    } else if(mynum < 60){
+        counter_off_limit--;
     }
-    if(num_log.data < 60){
-        if(num_log.data < q->data)
-            counter_off_limit--;
+
+    if(counter_off_limit < 1){
+        counter_off_limit = 1;
     }
 }
 
@@ -1440,7 +1443,7 @@ void num_handler(){
     lastUpdate = millis();
 
     if(turn_on()){
-        mynum++;
+        mynum = mynum + 2;
     }else{
         mynum--;
     }
@@ -1455,6 +1458,8 @@ void loop(){
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(mynum);
+    lcd.setCursor(0,1);
+    lcd.print(counter_off_limit);
 
     lv_timer_handler();
 
