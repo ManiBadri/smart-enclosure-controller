@@ -1153,7 +1153,7 @@ void setup(){
     lv_style_set_border_color(&def_button_style, btn_border_color);
     lv_style_set_border_width(&def_button_style, 2);
     lv_style_set_shadow_color(&def_button_style, btn_border_color);
-    lv_style_set_shadow_width(&def_button_style, 25);
+    lv_style_set_shadow_width(&def_button_style, 15); //TEST: was 25 lowered shadow
 
     //force first draw
     lv_timer_handler();   
@@ -1412,27 +1412,45 @@ bool turn_on(){
 void evalute_int(){
     static uint32_t lastUpdate = 0;
 
-    if(millis() - lastUpdate < 5000) return;
+    if(millis() - lastUpdate < 300000) return;
     lastUpdate = millis();
+
+    int counter = 0;
 
     Node *q = &num_log;
     while(q->next != nullptr){
         q = q->next;
+        if(counter == 5){
+            break;
+        }
+        counter++;
     }
 
     if(q == nullptr) return;
 
     int prev_value = q->data;
 
-    if(mynum > 60){
-        counter_off_limit++;
-    } else if(mynum < 60){
-        counter_off_limit--;
+
+
+    if(mynum > 60){//too high
+        if(mynum > q->data){
+            counter_off_limit++;
+        }
+    } else if(mynum < 60){ //is too low
+        if(mynum < q->data){
+            counter_off_limit--; //go up faster
+        }
     }
 
     if(counter_off_limit < 1){
         counter_off_limit = 1;
     }
+}
+
+
+int max(){
+
+
 }
 
 
@@ -1443,7 +1461,7 @@ void num_handler(){
     lastUpdate = millis();
 
     if(turn_on()){
-        mynum = mynum + 2;
+        mynum = mynum + 4;
     }else{
         mynum--;
     }
@@ -1460,6 +1478,10 @@ void loop(){
     lcd.print(mynum);
     lcd.setCursor(0,1);
     lcd.print(counter_off_limit);
+    //lcd.setCursor(0,2);
+    //lcd.print(counter_off);
+    //lcd.autoscroll();
+
 
     lv_timer_handler();
 
