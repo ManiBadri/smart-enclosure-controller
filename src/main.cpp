@@ -50,6 +50,7 @@ DHT dht(DHTPIN, DHTTYPE);
 //Preferences
 Preferences prefs;
 Preferences wifiPrefs;
+Preferences petPrefs;
 
 //for the temp to switch between fahrenheit and cel
 bool useFahrenheit = false;
@@ -115,6 +116,9 @@ void build_settings_screen();
 void build_edit_pets_screen();
 void build_add_pet_screen();
 
+void load_pets();
+int get_pet_count();
+int get_first_free_pet_slot();
 
 void build_home_button(lv_obj_t *screen);
 void build_scrn_title(lv_obj_t *screen, const char *title_text);
@@ -169,6 +173,14 @@ const int first_row_y = 65;
 const int second_row_y = 145;
 const int third_row_y = 225;
 
+const int max_pets = 25;
+struct Pet{
+    String name;
+    String species;
+    int age;
+    String sex;
+};
+Pet pets[max_pets];
 
 //Slot positions for the widgets
 lv_point_t slot_pos[MAX_SLOTS] = {
@@ -215,14 +227,6 @@ struct WifiConnectData {
     lv_obj_t* ta;
 };
 
-struct Pet{
-    String name;
-    String species;
-    int age;
-    String sex;
-
-};
-
 struct AddMenuRouteData {
     int slot;
     int destination;
@@ -245,6 +249,46 @@ void save_wifi_credentials(){
     wifiPrefs.putString("ssid", wifi_ssid);
     wifiPrefs.putString("password", wifi_password);
     wifiPrefs.end();
+}
+
+int get_pet_count(){
+    int count = 0;
+    for(int i = 0; i < max_pets; i++){
+        if(pets[i].name.length() == 0) break;
+        count++;
+    }
+    return count;
+}
+
+int get_first_free_pet_slot(){
+    for(int i = 0; i < max_pets; i++){
+        if(pets[i].name.length() == 0) return i;
+    }
+    return max_pets;
+}
+
+void load_pets(){
+    petPrefs.begin("pets", false);
+    int count = petPrefs.getUInt("count", 0);
+    if(count > max_pets) count = max_pets;
+    for(int i = 0; i < max_pets; i++){
+        if(i < count){
+            pets[i].name = petPrefs.getString(("pet" + String(i)).c_str(), "");
+        } else {
+            pets[i].name = "";
+        }
+    }
+    petPrefs.end();
+}
+
+void save_pets(){
+    petPrefs.begin("pets", false);
+    int count = get_pet_count();
+    petPrefs.putUInt("count", count);
+    for(int i = 0; i < max_pets; i++){
+        petPrefs.putString(("pet" + String(i)).c_str(), pets[i].name);
+    }
+    petPrefs.end();
 }
 
 //--------------------------- WIFI Screen UI ---------------------------
@@ -478,8 +522,6 @@ void create_widget_for_slot(int i){
 //--------------------------- EDIT PET SCREEN ---------------------------
 void build_edit_pets_screen(){
 
-    Pet pets[20];
-
     edit_pet_scrn = lv_obj_create(NULL);
 
     lv_obj_set_style_bg_color(edit_pet_scrn, lv_color_black(), 0);
@@ -510,25 +552,24 @@ void build_edit_pets_screen(){
 
 
 
-    if(pets[0].name == NULL){
+    int petCount = get_pet_count();
+    if(petCount == 0){
         lv_obj_t *lbl = lv_label_create(edit_pet_scrn);
         lv_label_set_text(lbl, "No pets added");
         lv_obj_set_style_text_font(lbl, &lv_font_montserrat_20, 0);
-        //lv_obj_set_pos(lbl, slot_pos[i].x - 15, slot_pos[i].y - 5);
         lv_obj_align(lbl, LV_ALIGN_CENTER, 0, 0);
         lv_obj_set_style_text_color(lbl, font_color, 0);
-    }else{
+    } else {
         lv_obj_t *pet_list = lv_list_create(edit_pet_scrn);  
         lv_obj_set_size(pet_list, 220, 200);
         lv_obj_align(pet_list, LV_ALIGN_TOP_MID, 0, 50);
-        //lv_obj_get_style_bg_color(list, wifi_box_color); 
         lv_obj_set_style_bg_color(pet_list, lv_color_white(), 0); //only out bar not the items
         lv_obj_set_style_border_color(pet_list, lv_color_white(), 0);
 
-        for(int i = 0; i < 20; i++){
+        for(int i = 0; i < petCount; i++){
             lv_obj_t *btn = lv_list_add_btn(pet_list, LV_SYMBOL_WIFI, pets[i].name.c_str());
             lv_obj_set_style_bg_color(btn, wifi_box_color, 0);
-            lv_obj_set_style_arc_color(btn, wifi_box_color,0);
+            lv_obj_set_style_arc_color(btn, wifi_box_color, 0);
         }
     }
 
@@ -538,26 +579,56 @@ void build_edit_pets_screen(){
 
 }
 
+static void add_pet_save_cb(lv_event_t * e){
+    lv_obj_t *ta = (lv_obj_t*)lv_event_get_user_data(e);
+    String name = lv_textarea_get_text(ta);
+    if(name.length() == 0) return;
+
+    int slot = get_first_free_pet_slot();
+    if(slot >= max_pets) return;
+
+    pets[slot].name = name;
+    save_pets();
+
+    build_edit_pets_screen();
+    lv_scr_load_anim(edit_pet_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
+}
+
 //--------------------------- ADD PET SCREEN ---------------------------
 void build_add_pet_screen(){
 
     add_pet_scrn = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(add_pet_scrn, lv_color_black(), 0);
 
-
     build_scrn_title(add_pet_scrn, "Add Pet");
 
-    lv_obj_t *lbl = lv_label_create(edit_pet_scrn);
-    lv_label_set_text(lbl, "No pets added");
+    lv_obj_t *name_label = lv_label_create(add_pet_scrn);
+    lv_label_set_text(name_label, "Pet Name:");
+    lv_obj_align(name_label, LV_ALIGN_TOP_MID, 0, 40);
+    lv_obj_set_style_text_color(name_label, font_color, 0);
 
+    lv_obj_t *name_ta = lv_textarea_create(add_pet_scrn);
+    lv_obj_set_size(name_ta, 200, 40);
+    lv_obj_align(name_ta, LV_ALIGN_TOP_MID, 0, 70);
+    lv_textarea_set_one_line(name_ta, true);
+    lv_textarea_set_text(name_ta, "");
+    lv_obj_set_style_text_color(name_ta, font_color, 0);
+    lv_obj_set_style_bg_color(name_ta, lv_color_white(), LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    lv_obj_t *save_btn = lv_btn_create(add_pet_scrn);
+    lv_obj_set_size(save_btn, 120, 40);
+    lv_obj_align(save_btn, LV_ALIGN_TOP_MID, 0, 125);
+    lv_obj_add_style(save_btn, &def_button_style, 0);
+
+    lv_obj_t *save_lbl = lv_label_create(save_btn);
+    lv_label_set_text(save_lbl, "Save Pet");
+    lv_obj_center(save_lbl);
+
+    lv_obj_add_event_cb(save_btn, add_pet_save_cb, LV_EVENT_CLICKED, name_ta);
 
     build_home_button(add_pet_scrn);
-
     lv_scr_load(add_pet_scrn);
-
 }
-
 
 //--------------------------- STAT SCREEN UI ---------------------------
 void build_stat_screen(){
@@ -1131,6 +1202,7 @@ void setup(){
     current_theme_color = lv_color_hex(prefs.getUInt("btn_color", 0x2196F3));
 
     useFahrenheit = prefs.getBool("useF", false);
+    load_pets();
 
     build_stat_screen();
 
@@ -1448,10 +1520,6 @@ void evalute_int(){
 }
 
 
-int max(){
-
-
-}
 
 
 void num_handler(){
