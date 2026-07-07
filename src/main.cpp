@@ -594,15 +594,24 @@ static void add_pet_save_cb(lv_event_t * e){
     lv_scr_load_anim(edit_pet_scrn, LV_SCR_LOAD_ANIM_NONE, 300, 0, false);
 }
 
+static void pet_name_keyboard_event_cb(lv_event_t * e){
+    lv_obj_t *kb = (lv_obj_t*)lv_event_get_target(e);
+
+    if(lv_event_get_code(e) == LV_EVENT_CANCEL){
+        lv_obj_del(kb);
+    }
+}
+
 static void show_pet_name_keyboard_cb(lv_event_t * e){
     lv_obj_t *name_ta = (lv_obj_t*)lv_event_get_user_data(e);
     lv_obj_t *scrn = lv_obj_get_parent(name_ta);
     lv_obj_t *kb = lv_keyboard_create(scrn);
     lv_keyboard_set_textarea(kb, name_ta);
-    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, -45);
+    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 15);
     lv_obj_set_size(kb, SCREEN_WIDTH - 6, SCREEN_HEIGHT/2);
     lv_obj_set_style_opa(kb, LV_OPA_COVER, 0);
     lv_obj_clear_flag(kb, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_event_cb(kb, pet_name_keyboard_event_cb, LV_EVENT_CANCEL, NULL);
 }
 
 //--------------------------- ADD PET SCREEN ---------------------------
@@ -629,16 +638,6 @@ void build_add_pet_screen(){
 
     lv_obj_add_event_cb(name_ta, show_pet_name_keyboard_cb, LV_EVENT_CLICKED, name_ta);
 
-
-
-    //lv_obj_t *panel = lv_obj_create(add_pet_scrn);
-    //lv_obj_set_size(panel, SCREEN_WIDTH - 6, SCREEN_HEIGHT/2);
-    //lv_obj_align(panel, LV_ALIGN_BOTTOM_MID, 0, 14);
-    //lv_obj_set_scroll_dir(panel, LV_DIR_VER);
-    //lv_obj_set_style_bg_color(panel, lv_color_black(), 0);
-    //lv_obj_set_style_border_width(panel, 0, 0);
-
-    
 
     lv_obj_t *save_btn = lv_btn_create(add_pet_scrn);
     lv_obj_set_size(save_btn, 120, 40);
