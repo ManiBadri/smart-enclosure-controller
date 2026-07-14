@@ -30,6 +30,11 @@ const int wifiGrnLed = 26;
 const int blueLed = 13;
 const int redLed = 12;
 
+
+//pump pin
+const int pumpPin = 27;
+
+
 //Backlight pin
 const int tftBackLight = 4;
 
@@ -561,19 +566,20 @@ void build_edit_pets_screen(){
         lv_obj_set_style_text_color(lbl, font_color, 0);
     } else {
         lv_obj_t *pet_list = lv_list_create(edit_pet_scrn);  
-        lv_obj_set_size(pet_list, 220, 200);
-        lv_obj_align(pet_list, LV_ALIGN_TOP_MID, 0, 50);
-        lv_obj_set_style_bg_color(pet_list, lv_color_white(), 0); //only out bar not the items
+        lv_obj_set_size(pet_list, 200, 200);
+        lv_obj_align(pet_list, LV_ALIGN_TOP_MID, 0, 70);
+        lv_obj_set_style_bg_color(pet_list, lv_color_black(), 0); //only out bar not the items
         lv_obj_set_style_border_color(pet_list, lv_color_white(), 0);
 
         for(int i = 0; i < petCount; i++){
             lv_obj_t *btn = lv_list_add_btn(pet_list, LV_SYMBOL_WIFI, pets[i].name.c_str());
+            lv_obj_set_style_text_color(btn, lv_color_black(), 0);
+            lv_obj_set_style_arc_rounded(btn, true, 0);
+            lv_obj_set_style_arc_width(btn, 30, 0);
             lv_obj_set_style_bg_color(btn, wifi_box_color, 0);
             lv_obj_set_style_arc_color(btn, wifi_box_color, 0);
         }
     }
-
-
 
     lv_scr_load(edit_pet_scrn);
 
@@ -1156,6 +1162,10 @@ void setup(){
     pinMode(redLed, OUTPUT);
     pinMode(blueLed, OUTPUT);
 
+    pinMode(pumpPin, OUTPUT);
+
+    digitalWrite(pumpPin, LOW);
+
     load_wifi_credentials();
 
     if(wifi_ssid.length() > 0 && wifi_password.length() > 0){
@@ -1554,8 +1564,10 @@ void num_handler(){
 
     if(turn_on()){
         mynum = mynum + 4;
+        digitalWrite(pumpPin, HIGH);
     }else{
         mynum--;
+        digitalWrite(pumpPin, LOW);
     }
 }
 
