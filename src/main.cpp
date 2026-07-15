@@ -9,11 +9,20 @@
 #include <Preferences.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h> 
+#include <PubSubClient.h>
+
 
 #define SCREEN_WIDTH 240
 #define SCREEN_HEIGHT 320
 
 #define MAX_SLOTS 6
+
+//network
+const char* mqttServer = "192.168.0.135";
+const int mqttPort = 1883;
+
+WiFiClient wifiClient;
+PubSubClient mqttClient(wifiClient);
 
 //WiFi
 String oldWiFiName = "";
@@ -1270,12 +1279,23 @@ void setup(){
 
 //--------------------------- WiFi ---------------------------
 void handleWiFi(){
+
     if(WiFi.status() != WL_CONNECTED){
         digitalWrite(wifiRedLed, HIGH);
         digitalWrite(wifiGrnLed, LOW);
         lv_img_set_src(wifi_img, &wifiOFF);
     }
     else{
+
+        mqttClient.setServer("192.168.0.135", 1883);
+
+        mqttClient.connect("ESP32");
+
+        mqttClient.publish(
+            "enclosure/test",
+            //"Hello from ESP32"
+        );
+
 
         digitalWrite(wifiGrnLed, HIGH);
         digitalWrite(wifiRedLed, LOW);
