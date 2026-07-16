@@ -1291,11 +1291,6 @@ void handleWiFi(){
 
         mqttClient.connect("ESP32");
 
-        mqttClient.publish(
-            "enclosure/test",
-            //"Hello from ESP32"
-        );
-
 
         digitalWrite(wifiGrnLed, HIGH);
         digitalWrite(wifiRedLed, LOW);
@@ -1310,6 +1305,17 @@ void handleWiFi(){
         lv_img_set_src(wifi_img, &wifiON);
     }
 }
+
+
+void handle_mqtt(int h){
+
+    if(!mqttClient.connected()){
+        mqttClient.setServer("192.168.0.135", 1883);
+        mqttClient.connect("ESP32");
+    }
+    mqttClient.publish("enclosure/humidity", String(h).c_str());
+}
+
 
 //--------------------------- Humidity Update ---------------------------
 void updateHumidity(){
@@ -1328,6 +1334,7 @@ void updateHumidity(){
 
     char buf[32];
     sprintf(buf, "%.1f%%", h);
+    handle_mqtt((int)(h + 0.5)); // rounded
 
     for(int i = 0; i < MAX_SLOTS; i++){
         
@@ -1343,6 +1350,7 @@ void updateHumidity(){
         }
     }
 }
+
 
 float CheckTemp(){
 
