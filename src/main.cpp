@@ -1306,14 +1306,31 @@ void handleWiFi(){
     }
 }
 
-
-void handle_mqtt(int h){
-
-    if(!mqttClient.connected()){
+void connect_mqtt(){
+    if(WiFi.status() == WL_CONNECTED){
         mqttClient.setServer("192.168.0.135", 1883);
         mqttClient.connect("ESP32");
     }
+}
+
+
+
+
+void handle__hum_mqtt(int h){
+
+    if(!mqttClient.connected()){
+        connect_mqtt();
+    }
     mqttClient.publish("enclosure/humidity", String(h).c_str());
+}
+
+
+void handle_temp_mqtt(float t){
+
+    if(!mqttClient.connected()){
+        connect_mqtt();
+    }
+    mqttClient.publish("enclosure/temperature", String(t).c_str());
 }
 
 
@@ -1334,7 +1351,7 @@ void updateHumidity(){
 
     char buf[32];
     sprintf(buf, "%.1f%%", h);
-    handle_mqtt((int)(h + 0.5)); // rounded
+    handle__hum_mqtt((int)(h + 0.5)); // rounded
 
     for(int i = 0; i < MAX_SLOTS; i++){
         
@@ -1387,6 +1404,7 @@ void updateTemperature(float t){
 
     char buf[32];
     sprintf(buf, "Temp: %.1f%s", t, useFahrenheit ? "F" : "C");
+    handle_temp_mqtt(t);
 
     for(int i = 0; i < MAX_SLOTS; i++){
 
