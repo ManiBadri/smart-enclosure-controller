@@ -1,3 +1,6 @@
+#define USER_SETUP_LOADED 1
+#include "User_Setup.h"
+
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 
@@ -1150,19 +1153,25 @@ void build_scrn_title(lv_obj_t *screen, const char *title_text){
 
 //--------------------------- SETUP ---------------------------
 void setup(){
+    Serial.begin(115200);
+    delay(100);
+    Serial.println("setup:start");
 
     //setting up debug terminal LCD ports
     Wire.begin(21,22); //SDA,SCL
+    Serial.println("setup:wire-ready");
 
     lcd.init();
+    Serial.println("setup:lcd-init-done");
     lcd.backlight();
+    Serial.println("setup:lcd-backlight-on");
     lcd.print("hello");
+    Serial.println("setup:lcd-print-done");
 
     Serial.println(esp_reset_reason());
 
-    Serial.begin(115200);
-
     dht.begin();
+    Serial.println("setup:dht-ready");
 
     pinMode(wifiRedLed, OUTPUT);
     pinMode(wifiGrnLed, OUTPUT);
@@ -1187,11 +1196,23 @@ void setup(){
     ledcAttachPin(tftBackLight, tftBackLightBrightness);
 
     ledcWrite(tftBackLightBrightness, 255);
+    Serial.println("setup:backlight-on");
     
     tft.begin();
+    Serial.println("setup:tft-begin-done");
     tft.setRotation(0);
+    Serial.println("setup:tft-rotation-done");
+    tft.fillScreen(TFT_BLACK);
+    Serial.println("setup:tft-clear-done");
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextSize(2);
+    tft.setCursor(20, 80);
+    tft.println("Starting UI...");
+    Serial.println("setup:tft-draw-done");
+    delay(250);
 
     lv_init();
+    Serial.println("setup:lv-init-done");
 
     lv_disp_draw_buf_init(&draw_buf, buf, NULL, SCREEN_WIDTH * 5);
 
