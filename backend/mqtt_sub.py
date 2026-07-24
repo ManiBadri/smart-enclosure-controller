@@ -1,6 +1,9 @@
-import paho.mqtt.client as mqtt
+import sqlite3
 
+import paho.mqtt.client as mqtt
 #called when the Pi connects to the broker
+
+connection = sqlite3.connect('enclosure.db')
 
 def on_connect(client, userdata, flags, reason_code, properties):
         print("Connected!")
