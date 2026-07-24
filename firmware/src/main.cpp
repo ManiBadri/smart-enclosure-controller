@@ -1232,6 +1232,7 @@ void setup(){
 
     tft.setTouch(calData); 
 
+
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.read_cb = my_touch_read;
     lv_indev_drv_register(&indev_drv);

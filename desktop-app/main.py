@@ -15,5 +15,3 @@ ui_file.close()
 window.show()
 
 app.exec()
-
-

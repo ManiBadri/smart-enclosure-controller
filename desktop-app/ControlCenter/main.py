@@ -6,8 +6,10 @@ app = QApplication([])
 
 loader = QUiLoader()
 
-ui_file = QFile("mainwindow.ui")
+ui_file = QFile("ui/mainwindow.ui")
 ui_file.open(QFile.ReadOnly)
+
+
 
 window = loader.load(ui_file)
 ui_file.close()

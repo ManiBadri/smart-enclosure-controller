@@ -14,12 +14,12 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="myBtn">
     <property name="geometry">
      <rect>
-      <x>410</x>
-      <y>230</y>
-      <width>75</width>
+      <x>320</x>
+      <y>160</y>
+      <width>80</width>
       <height>24</height>
      </rect>
     </property>
@@ -34,9 +34,21 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuEC">
+    <property name="title">
+     <string>EC</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuTEST">
+    <property name="title">
+     <string>TEST</string>
+    </property>
+   </widget>
+   <addaction name="menuEC"/>
+   <addaction name="menuTEST"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
