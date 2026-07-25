@@ -1,11 +1,10 @@
 import sqlite3
 import time
 
-import my_globals
+import myglobals
 
 def save_temp_data():
-    
-    if my_globals.latest_temperature is not None:
+    if myglobals.latest_temperature is not None:
         connection = sqlite3.connect("enclosure.db")
         connection.execute("""
         CREATE TABLE IF NOT EXISTS temperature_data (
@@ -14,11 +13,10 @@ def save_temp_data():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """)
-    connection.execute(
-        "INSERT INTO temperature_data (temperature) VALUES (?)",
-        (my_globals.latest_temperature,)
-    )
-    connection.commit()
-    connection.close()
-
-    print("Saved:", my_globals.latest_temperature)
+        connection.execute(
+            "INSERT INTO temperature_data (temperature) VALUES (?)",
+            (myglobals.latest_temperature,)
+        )
+        connection.commit()
+        connection.close()
+        print("Saved:", myglobals.latest_temperature)

@@ -1,6 +1,6 @@
 import paho.mqtt.client as mqtt
 import threading
-import my_globals
+import myglobals
 
 #called when the Pi connects to the broker 
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -13,24 +13,24 @@ def on_connect(client, userdata, flags, reason_code, properties):
 def on_message(client, userdata, msg):
         global latest_temperature
         if msg.topic == "enclosure/temperature":
-                my_globals.latest_temperature = float(msg.payload.decode())
-        print("New temperature:", my_globals.latest_temperature)
+                myglobals.latest_temperature = float(msg.payload.decode())
+        print("New temperature:", myglobals.latest_temperature)
         if msg.topic == "enclosure/humidity":
-                my_globals.latest_humidity = float(msg.payload.decode())
-        print("New humidity:", my_globals.latest_humidity)
+                myglobals.latest_humidity = float(msg.payload.decode())
+        print("New humidity:", myglobals.latest_humidity)
         #print(f"{msg.topic} - > {msg.payload.decode()}")
 
+def start_mqtt():
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
-client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        client.on_connect = on_connect
+        client.on_message = on_message
 
-client.on_connect = on_connect
-client.on_message = on_message
+        client.connect("192.168.0.135", 1883)
 
-client.connect("192.168.0.135", 1883)
+        print("starting loop....")
 
-print("starting loop....")
-
-client.loop_forever()
+        client.loop_forever()
 
 
 
