@@ -2,24 +2,22 @@ import asyncio
 import websockets
 import myglobals
 
-#connected_clients = set()
 async def websocket_handler(websocket):
-      myglobals.connected_clients.add(websocket)
-      print("desktop connected")
+    myglobals.connected_clients.add(websocket)
 
-      try:
-        async for messsage in websocket:
-              print("Desktop:", messsage)
-      finally:
-            myglobals.connected_clients.remove(websocket)
-            print("desktop disconnected")  
+    try:
+        async for message in websocket:
+            print(message)
 
-#This sends the newest temperature to every connected desktop
+    finally:
+        myglobals.connected_clients.remove(websocket)
+
 async def broadcast_temperature(temp):
-      if myglobals.connected_clients:
+    if myglobals.connected_clients:
         await asyncio.gather(
             *[client.send(str(temp)) for client in myglobals.connected_clients]
         )
+        print("*********broadcasted temp**********")
 
 async def websocket_server():
     async with websockets.serve(websocket_handler, "0.0.0.0", 8765):
@@ -27,4 +25,7 @@ async def websocket_server():
         await asyncio.Future()
 
 def websocket_thread():
-    asyncio.run(websocket_server())
+    myglobals.websocket_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(myglobals.websocket_loop)
+
+    myglobals.websocket_loop.run_until_complete(websocket_server())

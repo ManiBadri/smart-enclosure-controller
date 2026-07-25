@@ -1,6 +1,8 @@
 import time
 import mydatabase
-
+import asyncio
+import myglobals
+import websocket_server
 
 # Initialize the starting tracker
 start_time = time.monotonic()
@@ -29,6 +31,18 @@ def start_scheduler():
         if timer_60.check():
             mydatabase.save_temp_data()
             print("60 seconds passed! data saved")
+            if myglobals.websocket_loop is not None:
+                asyncio.run_coroutine_threadsafe(
+                    websocket_server.broadcast_temperature(
+                        myglobals.latest_temperature
+                    ),
+                    myglobals.websocket_loop
+                )
+            else:
+                print("WebSocket not ready yet")
+            
+
+            
 
         time.sleep(0.1)  #CPU usage
     
