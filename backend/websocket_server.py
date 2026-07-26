@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 import myglobals
+import myconfig
 
 async def websocket_handler(websocket):
     myglobals.connected_clients.add(websocket)
@@ -12,7 +13,7 @@ async def websocket_handler(websocket):
     finally:
         myglobals.connected_clients.remove(websocket)
 
-async def broadcast_temperature(temp):
+async def broadcast_sensors(temp):
     if myglobals.connected_clients:
         await asyncio.gather(
             *[client.send(str(temp)) for client in myglobals.connected_clients]
@@ -20,7 +21,7 @@ async def broadcast_temperature(temp):
         print("*********broadcasted temp**********")
 
 async def websocket_server():
-    async with websockets.serve(websocket_handler, "0.0.0.0", 8765):
+    async with websockets.serve(websocket_handler, "0.0.0.0", myconfig.WEBSOCKET_PORT):
         print("WebSocket server started")
         await asyncio.Future()
 

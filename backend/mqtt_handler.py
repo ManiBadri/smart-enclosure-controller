@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
-import threading
 import myglobals
+import myconfig
+
 
 #called when the Pi connects to the broker 
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -26,7 +27,7 @@ def start_mqtt():
         client.on_connect = on_connect
         client.on_message = on_message
 
-        client.connect("192.168.0.135", 1883)
+        client.connect("192.168.0.135", myconfig.MQTT_PORT)
 
         print("starting loop....")
 

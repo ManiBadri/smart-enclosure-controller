@@ -1,6 +1,4 @@
 import sqlite3
-import time
-
 import myglobals
 
 def save_temp_data():
