@@ -33,6 +33,12 @@ String wifi_ssid = "";
 String wifi_password = "";
 
 
+const int NORMAL_BRIGHTNESS = 255;
+const int DIM_BRIGHTNESS = 0;
+const uint32_t DIM_TIMEOUT = 100000; // milliseconds? see note below
+
+
+
 //--------------------------- PINS ---------------------------
 //WiFi LED
 const int wifiRedLed = 32;
@@ -48,12 +54,16 @@ const int pumpPin = 27;
 
 //Backlight pin
 const int tftBackLight = 4;
+const int tftBackLightBrightness = 0; // PWM channel
+
 
 const int arc_height_width = 50; //for the arc widget 
 
 //Dimentions
 //const int screenWidth = 0;
 //const int screenHeight = 0;
+
+bool isDimmed;
 
 //Terminal LCD screen
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -71,8 +81,7 @@ Preferences petPrefs;
 //for the temp to switch between fahrenheit and cel
 bool useFahrenheit = false;
 
-//writeConfig
-const int tftBackLightBrightness = 0;
+
 
 //TFT + LVGL
 TFT_eSPI tft = TFT_eSPI();
@@ -1155,6 +1164,7 @@ void build_scrn_title(lv_obj_t *screen, const char *title_text){
 void setup(){
     Serial.begin(115200);
     delay(100);
+    bool isDimmed = false;
 
     //setting up debug terminal LCD ports
     Wire.begin(21,22); //SDA,SCL
@@ -1182,10 +1192,7 @@ void setup(){
         WiFi.disconnect(true);
         WiFi.mode(WIFI_OFF);
     }
-    ledcSetup(tftBackLightBrightness, 5000, 8); //CHANGE: hard code value later channel 0, 5kHz, 8-bit resolution
-    ledcAttachPin(tftBackLight, tftBackLightBrightness);
-
-    ledcWrite(tftBackLightBrightness, 255);
+    
 
     
     tft.begin();
@@ -1265,6 +1272,16 @@ void setup(){
     lv_scr_load(main_scrn);
 
     Serial.println(esp_reset_reason());
+
+
+    ledcSetup(tftBackLightBrightness, 5000, 8); 
+
+    ledcAttachPin(tftBackLight, tftBackLightBrightness);
+
+    ledcWrite(tftBackLightBrightness, 5);
+
+
+
     
     lcd.clear();
 
@@ -1630,18 +1647,15 @@ void num_handler(){
 //--------------------------- LOOP ---------------------------
 void loop(){
 
-    static bool isDimmed = false;
+    //static bool isDimmed = false;
     float currentTemp = CheckTemp();
 
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print(mynum);
-    lcd.setCursor(0,1);
-    lcd.print(counter_off_limit);
-    //lcd.setCursor(0,2);
-    //lcd.print(counter_off);
-    //lcd.autoscroll();
-
+    //lcd.print(mynum);
+    //lcd.setCursor(0,1);
+    //lcd.print(counter_off_limit);
+//
 
     lv_timer_handler();
 
@@ -1670,19 +1684,31 @@ void loop(){
         chart_handler(currentTemp);
     }
     
-    if(lv_disp_get_inactive_time(NULL) < 100000){
+    uint32_t inactive_time = lv_disp_get_inactive_time(NULL);
 
-        if(isDimmed){
-            ledcWrite(tftBackLightBrightness, 255);
+    if (inactive_time < DIM_TIMEOUT)
+    {
+        if (isDimmed)
+        {
+            ledcWrite(tftBackLightBrightness, NORMAL_BRIGHTNESS);
             isDimmed = false;
         }
     }
-    else{
-        if(!isDimmed){
-            ledcWrite(tftBackLightBrightness, 20); //dims the backlight after certain time of inactivity
+    else
+    {
+        if (!isDimmed)
+        {
+            ledcWrite(tftBackLightBrightness, DIM_BRIGHTNESS);
             isDimmed = true;
         }
     }
+    //digitalWrite(TFT_BL, LOW);
+    //delay(2000);
+    //digitalWrite(TFT_BL, HIGH);
+    //delay(2000);
+    lcd.print(lv_disp_get_inactive_time(NULL));
+    lcd.setCursor(0,1);
+    lcd.print(isDimmed);
     delay(5);
 
 }
