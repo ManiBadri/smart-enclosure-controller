@@ -34,7 +34,7 @@ String wifi_password = "";
 
 
 const int NORMAL_BRIGHTNESS = 255;
-const int DIM_BRIGHTNESS = 0;
+const int DIM_BRIGHTNESS = 25;
 const uint32_t DIM_TIMEOUT = 100000; // milliseconds? see note below
 
 
@@ -1278,10 +1278,7 @@ void setup(){
 
     ledcAttachPin(tftBackLight, tftBackLightBrightness);
 
-    ledcWrite(tftBackLightBrightness, 5);
-
-
-
+    ledcWrite(tftBackLightBrightness, NORMAL_BRIGHTNESS);
     
     lcd.clear();
 
