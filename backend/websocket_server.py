@@ -13,7 +13,7 @@ async def websocket_handler(websocket):
     finally:
         myglobals.connected_clients.remove(websocket)
 
-async def broadcast_sensors(temp):
+async def broadcast_temperature(temp):
     if myglobals.connected_clients:
         await asyncio.gather(
             *[client.send(str(temp)) for client in myglobals.connected_clients]
