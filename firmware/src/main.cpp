@@ -1480,15 +1480,6 @@ void chart_handler(float t){
 
 //--------------------------- MY TESTS ---------------------------
 
-//void handle_test_int(){
-//    static uint32_t lastUpdate = 0;
-//
-//    if(millis() - lastUpdate < 300000) return;
-//    lastUpdate = millis();
-//
-//    mynum --;
-//    
-//}
 
 void log_int(){
     static uint32_t lastUpdate = 0;
@@ -1551,9 +1542,7 @@ void put_num_in_graph(){
 
 
 bool turn_on(){
-    //static uint32_t lastUpdate = 0;
-    //if(millis() - lastUpdate < 60000) return;
-    //lastUpdate = millis();
+
     counter_off++;
     if(counter_off > counter_off_limit){
         //turned_on = true;
@@ -1572,15 +1561,6 @@ bool turn_on(){
         return false;
     }
     
-    //if(turned_on){
-    //    mynum ++;
-    //    counter_on++;
-    //    if(counter_on > 2){
-    //        turned_on = false;
-    //        counter_off = 0;
-    //        counter_on = 0;
-    //    }
-    //}
 
 }
 
@@ -1649,10 +1629,7 @@ void loop(){
 
     lcd.clear();
     lcd.setCursor(0, 0);
-    //lcd.print(mynum);
-    //lcd.setCursor(0,1);
-    //lcd.print(counter_off_limit);
-//
+
 
     lv_timer_handler();
 
@@ -1661,7 +1638,6 @@ void loop(){
     handleWiFi();
     updateHumidity();
 
-    //handle_test_int();
     
     num_handler();
     evalute_int();
