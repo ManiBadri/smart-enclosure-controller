@@ -19,7 +19,7 @@ async def broadcast_sensor_data():
     packet = {
     "type": "sensor_update",
     "data": myglobals.sensor_data
-}
+    }
 
     message = json.dumps(packet)
 
