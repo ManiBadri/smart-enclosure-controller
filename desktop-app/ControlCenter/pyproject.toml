@@ -2,4 +2,4 @@
 name = "PySide Project"
 
 [tool.pyside6-project]
-files = ["main.py", "scripts/websocket_client.py"]
+files = ["main.py", "scripts/stylesheet.py", "scripts/websocket_client.py"]

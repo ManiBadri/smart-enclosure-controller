@@ -2,8 +2,11 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile
 from scripts.websocket_client import WebSocketClient
+from scripts.stylesheet import apply_theme
 
 app = QApplication([])
+
+apply_theme(app)
 
 loader = QUiLoader()
 
@@ -16,12 +19,14 @@ ui_file.close()
 
 ws = WebSocketClient()
 
-ws.message_received.connect(
-    lambda message: window.temperatureLabel.setText(message)
-)
+def update_temperature(message):
+    window.temperatureLabel.setText(message)
+
+ws.message_received.connect(update_temperature) ##when message is received the update
+
+
 
 ws.start()
-
 
 window.show()
 
