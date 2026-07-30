@@ -18,6 +18,7 @@ ui_file.close()
 
 ws = WebSocketClient()
 
+##get packets check what they are and update dashboard accordingly
 def update_dashboard(packet):
 
     if packet["type"] == "sensor_update":
@@ -26,6 +27,10 @@ def update_dashboard(packet):
 
         window.temperatureLabel.setText(
             f'{data["temperature"]:.1f} °C'
+        )
+
+        window.humLabel.setText(
+            f'{data["humidity"]:.1f}'
         )
 
 ws.message_received.connect(update_dashboard) ##when message is received the update
