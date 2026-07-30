@@ -12,14 +12,14 @@ def on_connect(client, userdata, flags, reason_code, properties):
 #called everytime a message arrives
 
 def on_message(client, userdata, msg):
-        global latest_temperature
         if msg.topic == "enclosure/temperature":
-                myglobals.latest_temperature = float(msg.payload.decode())
-        print("New temperature:", myglobals.latest_temperature)
-        if msg.topic == "enclosure/humidity":
-                myglobals.latest_humidity = float(msg.payload.decode())
-        print("New humidity:", myglobals.latest_humidity)
-        #print(f"{msg.topic} - > {msg.payload.decode()}")
+            myglobals.sensor_data["temperature"] = float(msg.payload.decode())
+            print("New temperature:", myglobals.sensor_data["temperature"])
+        
+        elif msg.topic == "enclosure/humidity":
+            myglobals.sensor_data["humidity"] = float(msg.payload.decode())
+            print("New humidity:", myglobals.sensor_data["humidity"])
+
 
 def start_mqtt():
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)

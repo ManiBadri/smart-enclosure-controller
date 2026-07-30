@@ -21,28 +21,18 @@ class IntervalTimer:
 
 def start_scheduler():
     print("*********************starting schedule*********************")
-    timer_30 = IntervalTimer(30)
+    timer_5 = IntervalTimer(5)
     timer_60 = IntervalTimer(60)
 
     while True:
-        if timer_30.check():
-            print("30 seconds passed!")
+        if timer_5.check():
+            asyncio.run_coroutine_threadsafe(
+                websocket_server.broadcast_sensor_data(),
+                myglobals.websocket_loop
+            )
 
         if timer_60.check():
-            mydatabase.save_temp_data()
-            print("60 seconds passed! data saved")
-            if myglobals.websocket_loop is not None:
-                asyncio.run_coroutine_threadsafe(
-                    websocket_server.broadcast_temperature(
-                        myglobals.latest_temperature
-                    ),
-                    myglobals.websocket_loop
-                )
-            else:
-                print("WebSocket not ready yet")
-            
-
-            
+            mydatabase.save_temp_data() 
 
         time.sleep(0.1)  #CPU usage
     
