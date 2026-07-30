@@ -16,15 +16,19 @@ ui_file.open(QFile.ReadOnly)
 window = loader.load(ui_file)
 ui_file.close()
 
-
 ws = WebSocketClient()
 
-def update_temperature(message):
-    window.temperatureLabel.setText(message)
+def update_dashboard(packet):
 
-ws.message_received.connect(update_temperature) ##when message is received the update
+    if packet["type"] == "sensor_update":
 
+        data = packet["data"]
 
+        window.temperatureLabel.setText(
+            f'{data["temperature"]:.1f} °C'
+        )
+
+ws.message_received.connect(update_dashboard) ##when message is received the update
 
 ws.start()
 
