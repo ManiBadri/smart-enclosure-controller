@@ -174,6 +174,9 @@ lv_obj_t *test_graph;
 lv_chart_series_t *test_series;
 bool is_on = false;
 
+const int TARGET = 60;
+const int DEAD_BAND = 2;
+
 
 
 //for the widget slots
@@ -1357,7 +1360,7 @@ void handle_temp_mqtt(float t){
     mqttClient.publish("enclosure/temperature", String(t).c_str());
 }
 
-
+int currentHumidity = 0;
 //--------------------------- Humidity Update ---------------------------
 void updateHumidity(){
     static uint32_t lastUpdate = 0;
@@ -1376,6 +1379,7 @@ void updateHumidity(){
     char buf[32];
     sprintf(buf, "%.1f%%", h);
     handle__hum_mqtt((int)(h + 0.5)); // rounded
+    currentHumidity = (int)(h + 0.5);
 
     for(int i = 0; i < MAX_SLOTS; i++){
         
@@ -1479,7 +1483,7 @@ void chart_handler(float t){
 
 
 //--------------------------- MY TESTS ---------------------------
-
+int old_hum = 0;
 
 void log_int(){
     static uint32_t lastUpdate = 0;
@@ -1488,7 +1492,7 @@ void log_int(){
     lastUpdate = millis();
 
     if(num_log.data == 0){
-        num_log.data = mynum;
+        num_log.data = currentHumidity;
     }else{
         int size = 1;
 
@@ -1498,7 +1502,7 @@ void log_int(){
             size++;
         }
         if(size < 60){
-            q->next = new Node(mynum, nullptr);
+            q->next = new Node(currentHumidity, nullptr);
         }else{
             Node* oldHead = num_log.next;
             num_log.data = oldHead->data;
@@ -1509,7 +1513,7 @@ void log_int(){
             while(q->next != nullptr){
                 q = q->next;
             }
-            q->next = new Node(mynum, nullptr);
+            q->next = new Node(currentHumidity, nullptr);
         }
     }
 }
@@ -1522,7 +1526,7 @@ void put_num_in_graph(){
     if(!test_graph || !test_series) return;
 
     if(!seeded){
-        int graph_value = constrain(mynum, 0, 100);
+        int graph_value = constrain(currentHumidity, 0, 100);
         for(int i = 0; i < 6; i++){
             lv_chart_set_next_value(test_graph, test_series, (lv_coord_t)graph_value);
         }
@@ -1535,91 +1539,73 @@ void put_num_in_graph(){
     if(millis() - lastUpdate < 60000) return;
     lastUpdate = millis();
 
-    int graph_value = constrain(mynum, 0, 100);
+    int graph_value = constrain(currentHumidity, 0, 100);
     lv_chart_set_next_value(test_graph, test_series, (lv_coord_t)graph_value);
     lv_chart_refresh(test_graph);
 }
 
 
-bool turn_on(){
-
+bool turn_on()
+{
     counter_off++;
-    if(counter_off > counter_off_limit){
-        //turned_on = true;
+
+    if(counter_off > counter_off_limit)
+    {
+        // First minute of this pump cycle
+        if(counter_on == 0)
+        {
+            old_hum = currentHumidity;
+        }
+
         counter_on++;
-        
-        if(counter_on > 2){
+
+        if(counter_on > 2)
+        {
             counter_on = 0;
             counter_off = 0;
             is_on = false;
             return false;
         }
+
         is_on = true;
         return true;
-    }else{
-        is_on = false;
-        return false;
     }
-    
 
+    is_on = false;
+    return false;
 }
 
 
-void evalute_int(){
+void evaluate_int()
+{
     static uint32_t lastUpdate = 0;
 
-    if(millis() - lastUpdate < 300000) return;
+    if(millis() - lastUpdate < 900000) return; // 15 minutes
     lastUpdate = millis();
 
-    int counter = 0;
+    int humidity_gain = currentHumidity - old_hum;
 
-    Node *q = &num_log;
-    while(q->next != nullptr){
-        q = q->next;
-        if(counter == 5){
-            break;
-        }
-        counter++;
+    if(currentHumidity > TARGET + DEAD_BAND)
+    {
+        // Overshot target
+        counter_off_limit++;
     }
-
-    if(q == nullptr) return;
-
-    int prev_value = q->data;
-
-
-
-    if(mynum > 60){//too high
-        if(mynum > q->data){
-            counter_off_limit++;
-        }
-    } else if(mynum < 60){ //is too low
-        if(mynum < q->data){
-            counter_off_limit--; //go up faster
+    else if(currentHumidity < TARGET - DEAD_BAND)
+    {
+        // Still below target
+        if(humidity_gain <= 0)
+        {
+            // Pump had almost no effect
+            counter_off_limit--;
         }
     }
 
-    if(counter_off_limit < 1){
-        counter_off_limit = 1;
-    }
+    counter_off_limit = constrain(counter_off_limit, 1, 10);
 }
 
 
 
 
-void num_handler(){
-
-    static uint32_t lastUpdate = 0;
-    if(millis() - lastUpdate < 60000) return;
-    lastUpdate = millis();
-
-    if(turn_on()){
-        mynum = mynum + 4;
-        digitalWrite(pumpPin, HIGH);
-    }else{
-        mynum--;
-        digitalWrite(pumpPin, LOW);
-    }
-}
 
 //--------------------------- LOOP ---------------------------
 void loop(){
@@ -1639,8 +1625,8 @@ void loop(){
     updateHumidity();
 
     
-    num_handler();
-    evalute_int();
+
+    evaluate_int();
     put_num_in_graph();
     log_int();
 
