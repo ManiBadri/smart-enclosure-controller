@@ -166,7 +166,7 @@ struct Node {
     Node(int data = 0, Node* next = nullptr) : data(data), next(next) {}
 };
 int counter_off = 0;
-int counter_off_limit = 5;
+int counter_off_limit = 100;
 int counter_on = 0;
 Node num_log;
 int mynum = 50;
@@ -1545,34 +1545,55 @@ void put_num_in_graph(){
 }
 
 
-bool turn_on()
+bool turn_on() //TEST
 {
-    counter_off++;
+    static uint32_t pumpOffStart = 0;
+    static uint32_t pumpOnStart = 0;
 
-    if(counter_off > counter_off_limit)
+    const uint32_t OFF_TIME = counter_off_limit * 60000UL;
+    const uint32_t ON_TIME = 2 * 60000UL;
+
+    // ---------------- PUMP IS CURRENTLY OFF ----------------
+    if (!is_on)
     {
-        // First minute of this pump cycle
-        if(counter_on == 0)
+        // Start the timer the first time we enter the OFF state
+        if (pumpOffStart == 0)
         {
+            pumpOffStart = millis();
+        }
+
+        // Has the required OFF time passed?
+        if (millis() - pumpOffStart >= OFF_TIME)
+        {
+            // Save humidity BEFORE turning pump on
             old_hum = currentHumidity;
+
+            is_on = true;
+            pumpOnStart = millis();
+
+            // Reset the OFF timer
+            pumpOffStart = 0;
+
+            return true;
         }
 
-        counter_on++;
-
-        if(counter_on > 2)
-        {
-            counter_on = 0;
-            counter_off = 0;
-            is_on = false;
-            return false;
-        }
-
-        is_on = true;
-        return true;
+        return false;
     }
 
-    is_on = false;
-    return false;
+    // ---------------- PUMP IS CURRENTLY ON ----------------
+
+    // Keep pump on for the required amount of time
+    if (millis() - pumpOnStart >= ON_TIME)
+    {
+        is_on = false;
+
+        // Start counting the OFF period again
+        pumpOffStart = millis();
+
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -1600,7 +1621,20 @@ void evaluate_int()
         }
     }
 
-    counter_off_limit = constrain(counter_off_limit, 1, 10);
+    counter_off_limit = constrain(counter_off_limit, 10, 1000);
+}
+
+
+void handle_pump()
+{
+    if(turn_on())
+    {
+        digitalWrite(pumpPin, HIGH);
+    }
+    else
+    {
+        digitalWrite(pumpPin, LOW);
+    }
 }
 
 
@@ -1624,7 +1658,7 @@ void loop(){
     handleWiFi();
     updateHumidity();
 
-    
+    handle_pump();
 
     evaluate_int();
     put_num_in_graph();
