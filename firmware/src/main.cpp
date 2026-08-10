@@ -166,7 +166,7 @@ struct Node {
     Node(int data = 0, Node* next = nullptr) : data(data), next(next) {}
 };
 int counter_off = 0;
-int counter_off_limit = 100;
+int counter_off_limit = 15;
 int counter_on = 0;
 Node num_log;
 int mynum = 50;
@@ -1551,7 +1551,7 @@ bool turn_on() //TEST
     static uint32_t pumpOnStart = 0;
 
     const uint32_t OFF_TIME = counter_off_limit * 60000UL;
-    const uint32_t ON_TIME = 2 * 60000UL;
+    const uint32_t ON_TIME = 5000UL;
 
     // ---------------- PUMP IS CURRENTLY OFF ----------------
     if (!is_on)
@@ -1601,29 +1601,28 @@ void evaluate_int()
 {
     static uint32_t lastUpdate = 0;
 
-    if(millis() - lastUpdate < 900000) return; // 15 minutes
+    if(millis() - lastUpdate < 1800000UL) return; // 30 minutes
     lastUpdate = millis();
 
     int humidity_gain = currentHumidity - old_hum;
 
     if(currentHumidity > TARGET + DEAD_BAND)
     {
-        // Overshot target
+        // Humidity is too high
         counter_off_limit++;
     }
     else if(currentHumidity < TARGET - DEAD_BAND)
     {
-        // Still below target
+        // Humidity is too low
         if(humidity_gain <= 0)
         {
-            // Pump had almost no effect
+            // Pump had little/no effect
             counter_off_limit--;
         }
     }
 
-    counter_off_limit = constrain(counter_off_limit, 10, 1000);
+    counter_off_limit = constrain(counter_off_limit, 1, 100);
 }
-
 
 void handle_pump()
 {
