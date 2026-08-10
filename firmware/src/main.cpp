@@ -1361,6 +1361,9 @@ void handle_temp_mqtt(float t){
 }
 
 int currentHumidity = 0;
+float humidityFilter = -1.0f;
+const float HUMIDITY_FILTER_ALPHA = 0.15f;
+
 //--------------------------- Humidity Update ---------------------------
 void updateHumidity(){
     static uint32_t lastUpdate = 0;
@@ -1375,17 +1378,23 @@ void updateHumidity(){
     if(h < 0) h = 0;
     if(h > 100) h = 100;
 
+    if(humidityFilter < 0.0f){
+        humidityFilter = h;
+    } else {
+        humidityFilter = (humidityFilter * (1.0f - HUMIDITY_FILTER_ALPHA)) + (h * HUMIDITY_FILTER_ALPHA);
+    }
 
+    float smoothedHumidity = humidityFilter;
     char buf[32];
-    sprintf(buf, "%.1f%%", h);
-    handle__hum_mqtt((int)(h + 0.5)); // rounded
-    currentHumidity = (int)(h + 0.5);
+    sprintf(buf, "%.1f%%", smoothedHumidity);
+    handle__hum_mqtt((int)(smoothedHumidity + 0.5f)); // rounded
+    currentHumidity = (int)(smoothedHumidity + 0.5f);
 
     for(int i = 0; i < MAX_SLOTS; i++){
         
         //update arc widgets
         if(slots[i] == WIDGET_HUMIDITY_ARC && slot_obj[i]){
-            lv_arc_set_value(slot_obj[i], (int)(h + 0.5)); // rounded
+            lv_arc_set_value(slot_obj[i], currentHumidity);
             lv_label_set_text(slot_label[i], buf);
         }
 
@@ -1483,7 +1492,7 @@ void chart_handler(float t){
 
 
 //--------------------------- MY TESTS ---------------------------
-int old_hum = 0;
+float old_hum = 0.0f;
 
 void log_int(){
     static uint32_t lastUpdate = 0;
@@ -1600,28 +1609,51 @@ bool turn_on() //TEST
 void evaluate_int()
 {
     static uint32_t lastUpdate = 0;
+    static float lastEvaluatedHumidity = 0.0f;
+    static int humidityTrendStreak = 0;
 
-    if(millis() - lastUpdate < 1800000UL) return; // 30 minutes
+    if(millis() - lastUpdate < 600000UL) return; // 10 minutes
     lastUpdate = millis();
 
-    int humidity_gain = currentHumidity - old_hum;
+    float humidity_gain = currentHumidity - old_hum;
+    float humidity_delta = currentHumidity - lastEvaluatedHumidity;
+
+    if(lastEvaluatedHumidity <= 0.0f){
+        lastEvaluatedHumidity = currentHumidity;
+        humidity_delta = 0.0f;
+    }
 
     if(currentHumidity > TARGET + DEAD_BAND)
     {
-        // Humidity is too high
-        counter_off_limit++;
+        // Humidity is too high and staying high, so let it settle longer between runs.
+        humidityTrendStreak++;
+        if(humidityTrendStreak >= 2){
+            counter_off_limit = constrain(counter_off_limit + 1, 1, 100);
+            humidityTrendStreak = 0;
+        }
     }
     else if(currentHumidity < TARGET - DEAD_BAND)
     {
-        // Humidity is too low
-        if(humidity_gain <= 0)
+        // Humidity is too low, but only reduce the wait time if it is still drifting downward.
+        if(humidity_delta < -0.5f && humidity_gain <= 0.0f)
         {
-            // Pump had little/no effect
-            counter_off_limit--;
+            humidityTrendStreak--;
+            if(humidityTrendStreak <= -2){
+                counter_off_limit = constrain(counter_off_limit - 1, 1, 100);
+                humidityTrendStreak = 0;
+            }
+        }
+        else
+        {
+            humidityTrendStreak = 0;
         }
     }
+    else
+    {
+        humidityTrendStreak = 0;
+    }
 
-    counter_off_limit = constrain(counter_off_limit, 1, 100);
+    lastEvaluatedHumidity = currentHumidity;
 }
 
 void handle_pump()
