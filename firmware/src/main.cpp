@@ -166,7 +166,7 @@ struct Node {
     Node(int data = 0, Node* next = nullptr) : data(data), next(next) {}
 };
 int counter_off = 0;
-int counter_off_limit = 15;
+int counter_off_limit = 30;
 int counter_on = 0;
 Node num_log;
 int mynum = 50;
@@ -1589,7 +1589,7 @@ bool turn_on() //TEST
         return false;
     }
 
-    // ---------------- PUMP IS CURRENTLY ON ----------------
+    //---------------- PUMP IS CURRENTLY ON ----------------
 
     // Keep pump on for the required amount of time
     if (millis() - pumpOnStart >= ON_TIME)
@@ -1612,7 +1612,7 @@ void evaluate_int()
     static float lastEvaluatedHumidity = 0.0f;
     static int humidityTrendStreak = 0;
 
-    if(millis() - lastUpdate < 600000UL) return; // 10 minutes
+    if(millis() - lastUpdate < 2700000UL) return; // 45 minutes
     lastUpdate = millis();
 
     float humidity_gain = currentHumidity - old_hum;
@@ -1628,7 +1628,7 @@ void evaluate_int()
         // Humidity is too high and staying high, so let it settle longer between runs.
         humidityTrendStreak++;
         if(humidityTrendStreak >= 2){
-            counter_off_limit = constrain(counter_off_limit + 1, 1, 100);
+            counter_off_limit = constrain(counter_off_limit + 1, 1, 1000);
             humidityTrendStreak = 0;
         }
     }
@@ -1639,7 +1639,7 @@ void evaluate_int()
         {
             humidityTrendStreak--;
             if(humidityTrendStreak <= -2){
-                counter_off_limit = constrain(counter_off_limit - 1, 1, 100);
+                counter_off_limit = constrain(counter_off_limit - 1, 1, 1000);
                 humidityTrendStreak = 0;
             }
         }
