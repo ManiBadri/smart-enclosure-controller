@@ -1560,7 +1560,7 @@ bool turn_on() //TEST
     static uint32_t pumpOnStart = 0;
 
     const uint32_t OFF_TIME = counter_off_limit * 60000UL;
-    const uint32_t ON_TIME = 5000UL;
+    const uint32_t ON_TIME = 1000UL;
 
     // ---------------- PUMP IS CURRENTLY OFF ----------------
     if (!is_on)
@@ -1623,8 +1623,7 @@ void evaluate_int()
         humidity_delta = 0.0f;
     }
 
-    if(currentHumidity > TARGET + DEAD_BAND)
-    {
+    if(currentHumidity > TARGET + DEAD_BAND){
         // Humidity is too high and staying high, so let it settle longer between runs.
         humidityTrendStreak++;
         if(humidityTrendStreak >= 2){
@@ -1632,8 +1631,7 @@ void evaluate_int()
             humidityTrendStreak = 0;
         }
     }
-    else if(currentHumidity < TARGET - DEAD_BAND)
-    {
+    else if(currentHumidity < TARGET - DEAD_BAND){
         // Humidity is too low, but only reduce the wait time if it is still drifting downward.
         if(humidity_delta < -0.5f && humidity_gain <= 0.0f)
         {
@@ -1648,22 +1646,18 @@ void evaluate_int()
             humidityTrendStreak = 0;
         }
     }
-    else
-    {
+    else{
         humidityTrendStreak = 0;
     }
 
     lastEvaluatedHumidity = currentHumidity;
 }
 
-void handle_pump()
-{
-    if(turn_on())
-    {
+void handle_pump(){
+    if(turn_on()){
         digitalWrite(pumpPin, HIGH);
     }
-    else
-    {
+    else{
         digitalWrite(pumpPin, LOW);
     }
 }
