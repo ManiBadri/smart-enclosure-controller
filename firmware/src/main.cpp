@@ -51,6 +51,9 @@ const int redLed = 12;
 //pump pin
 const int pumpPin = 27;
 
+//float switch pin
+const int FLOAT_PIN = 14;
+
 
 //Backlight pin
 const int tftBackLight = 4;
@@ -176,8 +179,35 @@ bool is_on = false;
 
 const int TARGET = 60;
 const int DEAD_BAND = 2;
+const uint32_t FLOAT_DEBOUNCE_MS = 150UL;
+bool floatTooLow = false;
 
+void updateFloatSwitchStatus(){
+    static bool lastStableState = false;
+    static uint32_t lastTransitionMs = 0;
+    static bool initialized = false;
 
+    const uint32_t now = millis();
+    const bool rawState = (digitalRead(FLOAT_PIN) == LOW);
+
+    if(!initialized){
+        lastStableState = rawState;
+        lastTransitionMs = now;
+        initialized = true;
+    }
+    else if(rawState != lastStableState){
+        if(now - lastTransitionMs >= FLOAT_DEBOUNCE_MS){
+            lastStableState = rawState;
+            lastTransitionMs = now;
+        }
+    }
+    else {
+        lastTransitionMs = now;
+    }
+
+    floatTooLow = lastStableState;
+    digitalWrite(blueLed, floatTooLow ? HIGH : LOW);
+}
 
 //for the widget slots
 lv_obj_t* slot_obj[MAX_SLOTS];   // main widget (arc, bar, etc.)
@@ -1187,6 +1217,9 @@ void setup(){
 
     digitalWrite(pumpPin, LOW);
 
+    //float switch pin: use pull-up because the switch is grounded when active
+    pinMode(FLOAT_PIN, INPUT_PULLUP);
+
     load_wifi_credentials();
 
     if(wifi_ssid.length() > 0 && wifi_password.length() > 0){
@@ -1562,6 +1595,12 @@ bool turn_on() //TEST
     const uint32_t OFF_TIME = counter_off_limit * 60000UL;
     const uint32_t ON_TIME = 1000UL;
 
+    if(floatTooLow){
+        is_on = false;
+        digitalWrite(pumpPin, LOW);
+        return false;
+    }
+
     // ---------------- PUMP IS CURRENTLY OFF ----------------
     if (!is_on)
     {
@@ -1654,6 +1693,12 @@ void evaluate_int()
 }
 
 void handle_pump(){
+    if(floatTooLow){
+        is_on = false;
+        digitalWrite(pumpPin, LOW);
+        return;
+    }
+
     if(turn_on()){
         digitalWrite(pumpPin, HIGH);
     }
@@ -1668,6 +1713,8 @@ void handle_pump(){
 
 //--------------------------- LOOP ---------------------------
 void loop(){
+
+    updateFloatSwitchStatus();
 
     //static bool isDimmed = false;
     float currentTemp = CheckTemp();
@@ -1690,10 +1737,8 @@ void loop(){
     log_int();
 
     if(is_on){
-        digitalWrite(blueLed, HIGH);
         digitalWrite(redLed, LOW);
     }else{
-        digitalWrite(blueLed, LOW);
         digitalWrite(redLed, HIGH);
     }
 
