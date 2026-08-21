@@ -179,6 +179,10 @@ bool is_on = false;
 
 const int TARGET = 60;
 const int DEAD_BAND = 2;
+const uint32_t MIN_WATER_INTERVAL_MINUTES = 30;
+const uint32_t MAX_WATER_INTERVAL_MINUTES = 1440;
+const uint32_t MIN_WATER_TIME_MS = 250;
+const uint32_t MAX_WATER_TIME_MS = 500;
 const uint32_t FLOAT_DEBOUNCE_MS = 150UL;
 bool floatTooLow = false;
 
@@ -1394,6 +1398,7 @@ void handle_temp_mqtt(float t){
 }
 
 int currentHumidity = 0;
+bool humidityValid = false;
 float humidityFilter = -1.0f;
 const float HUMIDITY_FILTER_ALPHA = 0.15f;
 
@@ -1422,6 +1427,7 @@ void updateHumidity(){
     sprintf(buf, "%.1f%%", smoothedHumidity);
     handle__hum_mqtt((int)(smoothedHumidity + 0.5f)); // rounded
     currentHumidity = (int)(smoothedHumidity + 0.5f);
+    humidityValid = true;
 
     for(int i = 0; i < MAX_SLOTS; i++){
         
@@ -1592,10 +1598,15 @@ bool turn_on() //TEST
     static uint32_t pumpOffStart = 0;
     static uint32_t pumpOnStart = 0;
 
-    const uint32_t OFF_TIME = counter_off_limit * 60000UL;
-    const uint32_t ON_TIME = 1000UL;
+    const uint32_t offTime = (uint32_t)counter_off_limit * 60000UL;
+    const int humidityError = TARGET - currentHumidity;
+    const uint32_t onTime = constrain(
+        MIN_WATER_TIME_MS + (uint32_t)max(humidityError, 0) * 20UL,
+        MIN_WATER_TIME_MS,
+        MAX_WATER_TIME_MS
+    );
 
-    if(floatTooLow){
+    if(floatTooLow || !humidityValid || currentHumidity >= TARGET + DEAD_BAND){
         is_on = false;
         digitalWrite(pumpPin, LOW);
         return false;
@@ -1611,7 +1622,7 @@ bool turn_on() //TEST
         }
 
         // Has the required OFF time passed?
-        if (millis() - pumpOffStart >= OFF_TIME)
+        if (millis() - pumpOffStart >= offTime)
         {
             // Save humidity BEFORE turning pump on
             old_hum = currentHumidity;
@@ -1631,7 +1642,7 @@ bool turn_on() //TEST
     //---------------- PUMP IS CURRENTLY ON ----------------
 
     // Keep pump on for the required amount of time
-    if (millis() - pumpOnStart >= ON_TIME)
+    if (millis() - pumpOnStart >= onTime)
     {
         is_on = false;
 
@@ -1648,48 +1659,28 @@ bool turn_on() //TEST
 void evaluate_int()
 {
     static uint32_t lastUpdate = 0;
-    static float lastEvaluatedHumidity = 0.0f;
-    static int humidityTrendStreak = 0;
 
-    if(millis() - lastUpdate < 2700000UL) return; // 45 minutes
+    if(!humidityValid || millis() - lastUpdate < 300000UL) return; // 5 minutes
     lastUpdate = millis();
 
-    float humidity_gain = currentHumidity - old_hum;
-    float humidity_delta = currentHumidity - lastEvaluatedHumidity;
+    const int humidityError = TARGET - currentHumidity;
+    if(abs(humidityError) <= DEAD_BAND) return;
 
-    if(lastEvaluatedHumidity <= 0.0f){
-        lastEvaluatedHumidity = currentHumidity;
-        humidity_delta = 0.0f;
+    // Correct by the size of the error instead of always changing one minute.
+    const int intervalChange = max(1, abs(humidityError) / 2);
+    if(humidityError < 0){
+        counter_off_limit = constrain(
+            counter_off_limit + intervalChange,
+            (int)MIN_WATER_INTERVAL_MINUTES,
+            (int)MAX_WATER_INTERVAL_MINUTES
+        );
+    } else {
+        counter_off_limit = constrain(
+            counter_off_limit - intervalChange,
+            (int)MIN_WATER_INTERVAL_MINUTES,
+            (int)MAX_WATER_INTERVAL_MINUTES
+        );
     }
-
-    if(currentHumidity > TARGET + DEAD_BAND){
-        // Humidity is too high and staying high, so let it settle longer between runs.
-        humidityTrendStreak++;
-        if(humidityTrendStreak >= 2){
-            counter_off_limit = constrain(counter_off_limit + 1, 1, 1000);
-            humidityTrendStreak = 0;
-        }
-    }
-    else if(currentHumidity < TARGET - DEAD_BAND){
-        // Humidity is too low, but only reduce the wait time if it is still drifting downward.
-        if(humidity_delta < -0.5f && humidity_gain <= 0.0f)
-        {
-            humidityTrendStreak--;
-            if(humidityTrendStreak <= -2){
-                counter_off_limit = constrain(counter_off_limit - 1, 1, 1000);
-                humidityTrendStreak = 0;
-            }
-        }
-        else
-        {
-            humidityTrendStreak = 0;
-        }
-    }
-    else{
-        humidityTrendStreak = 0;
-    }
-
-    lastEvaluatedHumidity = currentHumidity;
 }
 
 void handle_pump(){
