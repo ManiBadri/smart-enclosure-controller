@@ -1,3 +1,34 @@
+Smart Enclosure Controller
+
+An ongoing personal project to build a modular system for monitoring and managing environmental conditions in reptile, aquarium, and other small-pet enclosures.
+
+The project uses an ESP32 to collect environmental data and communicates with a Raspberry Pi backend using MQTT. A desktop application is also being developed to provide a user interface for monitoring and controlling the system.
+
+features
+    Temperature and humidity monitoring using a DHT22 sensor
+    ESP32-based sensor data collection
+    MQTT communication between the ESP32 and Raspberry Pi
+    Python backend running on a Raspberry Pi
+    Initial desktop application built with PySide6
+    Modular design intended to support additional sensors and automation (plug and play system)
+    planned multiple enclosures (ESP32) being handles and attached to one rasbpi and shown on one desktop app
+
+
+
+rough architecture
+
+sensors -> esp32 -> MQTT -> raspi -> python and WebSocket -> desktop app
+
+
+challanges
+    Humidty:
+        Humidty is unpredictable changes can pick up pace fast 
+        having a system that adapts would still need time to calibrate and adjust creating a window where humidty is unstable
+
+Gaoland focus:
+    Back end communication, IoT, embedded systems and networking
+    
+
 
 This directory is intended for PlatformIO Test Runner and project tests.
 
